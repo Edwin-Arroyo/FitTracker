@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 3a2274bec74b09bc0cd0e1094cb78fc62cd49ffd Edwin Arroyo <edwinarroyo@edwins-mbp.mynetworksettings.com> 1731375549 -0500	commit (initial): Frontend components + pages for FitTracker
+3a2274bec74b09bc0cd0e1094cb78fc62cd49ffd 86b1ad7d8001e3718ef67a872149ab57e672c7f4 Edwin Arroyo <edwinarroyo@edwins-mbp.mynetworksettings.com> 1731375727 -0500	commit: Remove node_modules from git tracking
+86b1ad7d8001e3718ef67a872149ab57e672c7f4 33606e1e4fea56e2e4b7277021cfbc4e5b03d85e Edwin Arroyo <edwinarroyo@edwins-mbp.mynetworksettings.com> 1731376034 -0500	commit: Frontend for FitTracker
