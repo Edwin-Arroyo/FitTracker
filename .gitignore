@@ -1,18 +1,53 @@
-# dependencies
+# Dependencies
 node_modules/
-dist/
+venv/
+__pycache__/
+*.pyc
 
-# environment
+# Environment files
 .env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# logs
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Database
+db.sqlite3
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# system files
+# System files
 .DS_Store
+Thumbs.db
 
-# git backup
-.git.backup/
+# Django specific
+*.log
+local_settings.py
+media/
 
+# Testing
+coverage/
+.coverage
+htmlcov/
+
+# Migration files (optional, but recommended to keep)
+# */migrations/*
+# !*/migrations/__init__.py
+
+# Temporary files
+*.tmp
+*.bak 
