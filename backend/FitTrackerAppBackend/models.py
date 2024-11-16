@@ -73,12 +73,39 @@ class TrainerClient(models.Model):
 # - Should store user's physical information (height, weight, age)
 # - Should store fitness goals
 # - One-to-one relationship with FitTrackerUser
+# UserProfile model
+class UserProfile(models.Model):
+    user = models.OneToOneField(FitTrackerUser, on_delete=models.CASCADE, related_name='profile')
+    height = models.FloatField()  # Height in feet e.g (5.6 is five and a falf feet)
+    weight = models.FloatField()  # Weight in LBS e.g (125.7 lbs)
+    age = models.IntegerField()
+    fitness_goals = models.TextField()  # Store goals as text
 
 # TODO: Create WorkoutPlan model
 # - Should store workout routines created by trainers, or user created
 # - Should include duration, difficulty level
 # - Foreign key to trainer who created it
 # - Many-to-many relationship with exercises
+
+class WorkoutPlan(models.Model):
+    class DifficultyLevel(models.TextChoices):
+        EASY = 'Easy', 'Easy'
+        MEDIUM = 'Medium', 'Medium'
+        HARD = 'Hard', 'Hard'
+
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    duration = models.IntegerField()  # Duration in mins
+    difficulty_level = models.CharField(
+        max_length=6,
+        choices=DifficultyLevel.choices,
+        default=DifficultyLevel.MEDIUM
+    )
+    trainer = models.ForeignKey(FitTrackerUser, on_delete=models.CASCADE, null=True, blank=True, related_name='created_plans')
+    exercises = models.ManyToManyField(Exercise, related_name='workout_plans')
+
+    def __str__(self):
+        return self.name
 
 # TODO: Create Progress model
 # - Should track user's weight changes
