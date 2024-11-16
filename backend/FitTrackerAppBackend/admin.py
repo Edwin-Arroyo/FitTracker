@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import FitTrackerUser
-
+from .models import FitTrackerUser, Exercise, WorkoutPlan, Workout, WorkoutHistory, ExerciseLog, Progress, UserProfile, Nutrition, TrainerClient
 
 # TODO: Create Admin classes
 # - Register all models with admin site
@@ -19,3 +18,14 @@ from .models import FitTrackerUser
 #   * List filters: user, created_at
 
 admin.site.register(FitTrackerUser)
+# Register your models here.
+admin.site.register(Exercise)
+admin.site.register(WorkoutPlan)
+admin.site.register(Workout)
+admin.site.register(WorkoutHistory)
+admin.site.register(ExerciseLog)
+admin.site.register(Progress)
+admin.site.register(UserProfile)
+admin.site.register(Nutrition)
+admin.site.register(TrainerClient)
+
