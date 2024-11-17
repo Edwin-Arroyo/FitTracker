@@ -59,6 +59,7 @@ def login_user(request):
                     'username': user.username,
                     'email': user.email,
                     'role': user.role,
+                    'isAdmin': user.role == 'admin',
                     'created_at': user.created_at.isoformat()
                 }, status=status.HTTP_200_OK)
             return Response(
@@ -202,3 +203,32 @@ def get_user_stats(request, user_id):
     except Exception as e:
         print(f"Error in get_user_stats: {str(e)}")  # Add debugging
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@csrf_exempt
+@api_view(['GET'])
+def admin_dashboard(request):
+    try:
+        # Filter out admin users
+        users = FitTrackerUser.objects.exclude(role='admin')
+        user_data = []
+        
+        for user in users:
+            user_data.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'is_approved': user.is_approved,
+                'created_at': user.created_at.isoformat()
+            })
+            
+        return Response({
+            'users': user_data,
+            'total_users': len(user_data),
+            'pending_approvals': FitTrackerUser.objects.exclude(role='admin').filter(is_approved=False).count()
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )

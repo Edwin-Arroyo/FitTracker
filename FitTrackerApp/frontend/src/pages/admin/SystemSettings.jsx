@@ -1,7 +1,7 @@
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../Components/Navbar/Navbar";
 import Footer from "../../Components/Footer/Footer";
-import "./Admin.css";
+import "./AdminDashboard.css";
 
 const SystemSettings = () => {
   return (

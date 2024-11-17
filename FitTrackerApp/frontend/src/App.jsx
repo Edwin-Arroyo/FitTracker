@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -12,6 +12,17 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import SystemSettings from "./pages/admin/SystemSettings";
+
+// Protected Route component for admin access
+const AdminRoute = ({ children }) => {
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+  if (!isAdmin) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
@@ -72,6 +83,14 @@ function App() {
                   <Route path="/" element={<AdminDashboard />} />
                   <Route path="/users" element={<UserManagement />} />
                   <Route path="/settings" element={<SystemSettings />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <AdminRoute>
+                        <AdminDashboard />
+                      </AdminRoute>
+                    }
+                  />
                 </Routes>
               </ProtectedRoute>
             }

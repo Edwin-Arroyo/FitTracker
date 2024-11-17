@@ -23,7 +23,8 @@ from .views import (
     log_exercise, 
     log_workout, 
     log_nutrition, 
-    get_user_stats
+    get_user_stats,
+    admin_dashboard
 )
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -37,6 +38,7 @@ urlpatterns = [
         path('users/<int:user_id>/workouts/', log_workout, name='log_workout'),
         path('users/<int:user_id>/macros/', log_nutrition, name='log_nutrition'),
         path('users/<int:user_id>/stats/', get_user_stats, name='get_user_stats'),
+        path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
     ])),
 ]
 

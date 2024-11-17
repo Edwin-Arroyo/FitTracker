@@ -62,13 +62,20 @@ const Login = () => {
         throw new Error(data.error || "Login failed");
       }
 
-      // Store user information in localStorage for persistence
+      // Store user information in localStorage
       localStorage.setItem("userId", data.id);
       localStorage.setItem("userRole", data.role);
+      localStorage.setItem("isAdmin", data.isAdmin);
 
-      // Update authentication context and redirect
+      // Update authentication context
       login(data.role);
-      navigate("/profile");
+
+      // Redirect based on role
+      if (data.isAdmin) {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/profile");
+      }
     } catch (error) {
       console.error("Login error:", error);
       setError(error.message || "Login failed");
