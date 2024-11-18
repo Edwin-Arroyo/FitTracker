@@ -24,4 +24,13 @@ class NutritionSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = FitTrackerUser
-        fields = ['id', 'username', 'email', 'role', 'created_at']
+        fields = ['id', 'username', 'email', 'password', 'role', 'is_approved', 'created_at']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'created_at': {'read_only': True},
+            'is_approved': {'read_only': True},
+            'role': {'read_only': True}
+        }
+
+    def create(self, validated_data):
+        return FitTrackerUser.objects.create(**validated_data)

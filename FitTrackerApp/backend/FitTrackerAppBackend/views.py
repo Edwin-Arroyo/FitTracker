@@ -218,17 +218,45 @@ def admin_dashboard(request):
                 'username': user.username,
                 'email': user.email,
                 'role': user.role,
-                'is_approved': user.is_approved,
                 'created_at': user.created_at.isoformat()
             })
             
         return Response({
             'users': user_data,
             'total_users': len(user_data),
-            'pending_approvals': FitTrackerUser.objects.exclude(role='admin').filter(is_approved=False).count()
+            'total_trainers': FitTrackerUser.objects.filter(role='trainer').count()
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
             {'error': str(e)}, 
             status=status.HTTP_400_BAD_REQUEST
         )
+
+@csrf_exempt
+@api_view(['POST'])
+def create_trainer(request):
+    try:
+        data = request.data
+        data['role'] = 'trainer'
+        data['is_approved'] = True
+        
+        serializer = UserSerializer(data=data)
+        if serializer.is_valid():
+            user = FitTrackerUser.objects.create(
+                username=data['username'],
+                email=data['email'],
+                password=data['password'],
+                role='trainer',
+                is_approved=True
+            )
+            
+            return Response({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'created_at': user.created_at.isoformat()
+            }, status=status.HTTP_201_CREATED)
+        return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
