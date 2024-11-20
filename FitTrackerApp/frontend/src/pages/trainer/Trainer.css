@@ -1,0 +1,118 @@
+.trainer-dashboard {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .trainer-dashboard h1 {
+    color: #333;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+    margin: 2rem 0;
+  }
+  
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .stat-card h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+  
+  .stat-card p {
+    color: #2196F3;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+  }
+  
+  .clients-table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+  }
+  
+  .clients-table h2 {
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #666;
+  }
+  
+  tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .status.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  .status.inactive {
+    background-color: #fafafa;
+    color: #757575;
+  }
+  
+  .view-profile-btn {
+    background-color: #2196F3;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+  
+  .view-profile-btn:hover {
+    background-color: #1976D2;
+  }
+  
+  @media (max-width: 768px) {
+    .trainer-dashboard {
+      padding: 1rem;
+    }
+    
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+    
+    th, td {
+      padding: 0.75rem;
+    }
+  }

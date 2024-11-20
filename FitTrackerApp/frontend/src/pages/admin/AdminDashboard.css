@@ -10,11 +10,24 @@
   text-align: center;
 }
 
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+}
+
 .dashboard-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
   margin: 2rem 0;
+  width: 100%;
 }
 
 .stat-card {
@@ -101,6 +114,14 @@ tr:hover {
   th, td {
     padding: 0.75rem;
   }
+  
+  .dashboard-stats {
+    flex-direction: column;
+  }
+  
+  .stat-card {
+    width: 100%;
+  }
 }
 
 .admin-actions {
@@ -161,4 +182,75 @@ tr:hover {
 
 .trainer-form-container button[type="submit"]:hover {
   background-color: #1721ec;
+}
+
+.trainer-assignment {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.trainer-assignment select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.assign-btn {
+  background-color: #2196F3;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.assign-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.assign-btn:hover:not(:disabled) {
+  background-color: #1976D2;
+}
+
+.assigned-trainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.assigned-trainer span {
+  color: #0853dd;
+  font-weight: 500;
+}
+
+.reassign-btn {
+  background-color: #f5f5f5;
+  color: #666;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.reassign-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.logout-btn {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
 }

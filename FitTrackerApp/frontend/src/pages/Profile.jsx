@@ -21,32 +21,42 @@ const Profile = () => {
     total_calories: 0,
     calories_burned: 0,
   });
+  // state for user profile data
+  const [profileData, setProfileData] = useState({
+    height_feet: 0,
+    height_inches: 0,
+    weight: 0,
+    age: 0,
+    fitness_goals: ''
+  });
 
   // useEffect hook to fetch user data when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const userId = localStorage.getItem("userId");
-        if (!userId) {
-          throw new Error("No user ID found");
+        const token = localStorage.getItem("token");
+        
+        if (!userId || !token) {
+            throw new Error("No user ID or token found");
         }
 
         const response = await fetch(
-          `http://localhost:8000/api/users/${userId}/`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+            `http://localhost:8000/api/users/${userId}/`,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+            }
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch user data");
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to fetch user data");
         }
 
         const data = await response.json();
-        console.log("Fetched user data:", data); // Debug log
         setUserData(data);
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -82,10 +92,76 @@ const Profile = () => {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+      
+      if (!userId || !token) {
+        throw new Error("No user ID or token found");
+      }
+
+      const response = await fetch(
+        `http://localhost:8000/api/users/${userId}/profile/`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData(data);
+      }
+    } catch (err) {
+      console.error("Error fetching profile data:", err);
+    }
+  };
+
   // Handler for logout button
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const handleProfileUpdate = async (profileData) => {
+    try {
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+      
+      if (!userId || !token) {
+        throw new Error("No user ID or token found");
+      }
+
+      const response = await fetch(
+        `http://localhost:8000/api/users/${userId}/profile/`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(profileData)
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update profile");
+      }
+
+      // Refresh user data after successful update
+      fetchUserData();
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      setError(err.message);
+    }
   };
 
   // Conditional rendering based on state
@@ -107,6 +183,32 @@ const Profile = () => {
             <p className="join-date">
               Member since: {new Date(userData.created_at).toLocaleDateString()}
             </p>
+            <div className="profile-details">
+              <div className="detail-item">
+                <span className="detail-label">Height:</span>
+                <span className="detail-value">
+                  {profileData.height_feet}'{profileData.height_inches}"
+                </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Weight:</span>
+                <span className="detail-value">{profileData.weight} lbs</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Age:</span>
+                <span className="detail-value">{profileData.age} years</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Fitness Goals:</span>
+                <p className="detail-value goals">{profileData.fitness_goals}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/profile/info")}
+              className="action-button"
+            >
+              Update Profile Info
+            </button>
           </div>
         </div>
 

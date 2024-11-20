@@ -8,6 +8,7 @@ const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [showTrainerForm, setShowTrainerForm] = useState(false);
 
   // State for trainer creation form
@@ -16,6 +17,10 @@ const AdminDashboard = () => {
     email: "",
     password: "",
   });
+
+  // state for trainer assignment
+  const [trainers, setTrainers] = useState([]);
+  const [selectedTrainer, setSelectedTrainer] = useState("");
 
   // Fetch dashboard data from the backend
   const fetchDashboardData = async () => {
@@ -37,6 +42,22 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  // Fetch trainers for dropdown
+  const fetchTrainers = async () => {
+    try {
+      const trainersData = dashboardData.users.filter(user => user.role === 'trainer');
+      setTrainers(trainersData);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (dashboardData) {
+      fetchTrainers();
+    }
+  }, [dashboardData]);
 
   // Handle trainer creation form submission
   const handleCreateTrainer = async (e) => {
@@ -68,6 +89,35 @@ const AdminDashboard = () => {
     }
   };
 
+  // Handle trainer assignment
+  const handleAssignTrainer = async (clientId) => {
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/admin/assign-trainer/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            trainer_id: selectedTrainer,
+            client_id: clientId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to assign trainer");
+      }
+
+      // Refresh dashboard data
+      await fetchDashboardData();
+      setSelectedTrainer("");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   // Helper function to display user roles in a readable format
   const getRoleDisplay = (role) => {
     switch (role) {
@@ -80,6 +130,12 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    localStorage.clear();
+    navigate('/login');
+  };
+
   // Error and loading states
   if (error) return <div className="error-message">{error}</div>;
   if (!dashboardData) return <div>Loading...</div>;
@@ -87,17 +143,22 @@ const AdminDashboard = () => {
   // Main dashboard render
   return (
     <div className="admin-dashboard">
-      <h1>Admin Dashboard</h1>
+      <div className="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
-      {/* Statistics Cards */}
+      {/* Stats Cards */}
       <div className="dashboard-stats">
         <div className="stat-card">
           <h3>Total Users</h3>
-          <p>{dashboardData.total_users}</p>
+          <p>{dashboardData?.total_users || 0}</p>
         </div>
         <div className="stat-card">
           <h3>Total Trainers</h3>
-          <p>{dashboardData.total_trainers}</p>
+          <p>{dashboardData?.total_trainers || 0}</p>
         </div>
       </div>
 
@@ -164,6 +225,7 @@ const AdminDashboard = () => {
               <th>Email</th>
               <th>Type</th>
               <th>Created At</th>
+              <th>Assign Trainer</th>
             </tr>
           </thead>
           <tbody>
@@ -173,6 +235,44 @@ const AdminDashboard = () => {
                 <td>{user.email}</td>
                 <td>{getRoleDisplay(user.role)}</td>
                 <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                <td>
+                  {user.role === 'user' && (
+                    <td>
+                      {user.assigned_trainer ? (
+                        <div className="assigned-trainer">
+                          <span>Assigned to: {user.assigned_trainer.username}</span>
+                          <button
+                            className="reassign-btn"
+                            onClick={() => setSelectedTrainer("")}
+                          >
+                            Reassign
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="trainer-assignment">
+                          <select
+                            value={selectedTrainer}
+                            onChange={(e) => setSelectedTrainer(e.target.value)}
+                          >
+                            <option value="">Select Trainer</option>
+                            {trainers.map((trainer) => (
+                              <option key={trainer.id} value={trainer.id}>
+                                {trainer.username}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="assign-btn"
+                            onClick={() => handleAssignTrainer(user.id)}
+                            disabled={!selectedTrainer}
+                          >
+                            Assign
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

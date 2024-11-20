@@ -12,6 +12,9 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import SystemSettings from "./pages/admin/SystemSettings";
+import TrainerDashboard from "./pages/trainer/TrainerDashboard";
+import ClientProfile from "./pages/trainer/ClientProfile";
+import ProfileInfo from "./pages/ProfileInfo";
 
 // Protected Route component for admin access
 const AdminRoute = ({ children }) => {
@@ -63,13 +66,17 @@ function App() {
           />
 
           <Route
+            path="/profile/info"
+            element={<ProfileInfo />}
+          />
+
+          <Route
             path="/trainer/*"
             element={
-              <ProtectedRoute allowedRoles={["trainer", "admin"]}>
+              <ProtectedRoute allowedRoles={["trainer"]}>
                 <Routes>
-                  {/* TODO: Add trainer dashboard and client management components */}
-                  {/*<Route path="/dashboard" element={<TrainerDashboard />} />*/}
-                  {/*<Route path="/clients" element={<ClientManagement />} />*/}
+                  <Route path="/dashboard" element={<TrainerDashboard />} />
+                  <Route path="/client/:clientId" element={<ClientProfile />} />
                 </Routes>
               </ProtectedRoute>
             }

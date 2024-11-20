@@ -25,7 +25,12 @@ from .views import (
     log_nutrition, 
     get_user_stats,
     admin_dashboard,
-    create_trainer
+    create_trainer,
+    trainer_clients,
+    assign_trainer,
+    client_workout_history,
+    client_progress,
+    user_profile    
 )
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -41,6 +46,11 @@ urlpatterns = [
         path('users/<int:user_id>/stats/', get_user_stats, name='get_user_stats'),
         path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
         path('admin/create-trainer/', create_trainer, name='create_trainer'),
+        path('trainer/<int:trainer_id>/clients/', trainer_clients, name='trainer_clients'),
+        path('admin/assign-trainer/', assign_trainer, name='assign_trainer'),
+         path('users/<int:client_id>/workout-history/', client_workout_history, name='client_workout_history'),
+        path('users/<int:client_id>/progress/', client_progress, name='client_progress'),
+        path('users/<int:user_id>/profile/', user_profile, name='user_profile'),
     ])),
 ]
 

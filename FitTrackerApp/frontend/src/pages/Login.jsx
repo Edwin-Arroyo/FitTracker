@@ -46,39 +46,42 @@ const Login = () => {
     setError("");
 
     try {
-      // Make POST request to login endpoint with form data
       const response = await fetch("http://localhost:8000/api/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      // Handle unsuccessful response
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        if (response.status === 401) {
+          throw new Error("Invalid credentials");
+        }
+        throw new Error("Login failed");
       }
 
-      // Store user information in localStorage
+      const data = await response.json();
       localStorage.setItem("userId", data.id);
       localStorage.setItem("userRole", data.role);
-      localStorage.setItem("isAdmin", data.isAdmin);
+      localStorage.setItem("token", data.token);
 
-      // Update authentication context
       login(data.role);
 
-      // Redirect based on role
-      if (data.isAdmin) {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/profile");
+      switch (data.role) {
+        case 'admin':
+          navigate("/admin/dashboard");
+          break;
+        case 'trainer':
+          navigate("/trainer/dashboard");
+          break;
+        default:
+          navigate("/profile");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.message || "Login failed");
+      setError(error.message || "Login failed. Please try again.");
     }
   };
 

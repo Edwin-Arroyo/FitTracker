@@ -145,4 +145,41 @@
 
 .action-button:hover {
   background: #0056b3;
+}
+
+.stat-text {
+  font-size: 0.9rem;
+  margin: 0.5rem;
+  text-align: center;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.profile-details {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.detail-item {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  min-width: 100px;
+  color: #495057;
+}
+
+.detail-value {
+  color: #212529;
+}
+
+.detail-value.goals {
+  white-space: pre-wrap;
+  margin: 0;
 } 

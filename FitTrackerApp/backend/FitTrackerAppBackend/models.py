@@ -49,18 +49,17 @@ class WorkoutHistory(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.calories} calories on {self.workout_date.date()}"
     
-    
-# Add a trainer-client relationship model
+# trainer client relationship model, trainer can view the information of their clients that are assigned to them by the admin 
 class TrainerClient(models.Model):
     trainer = models.ForeignKey(FitTrackerUser, related_name='trainer_clients', on_delete=models.CASCADE)
     client = models.ForeignKey(FitTrackerUser, related_name='client_trainers', on_delete=models.CASCADE)
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-
+    is_active = models.BooleanField(default=True)
     class Meta:
         unique_together = ('trainer', 'client')  # Prevent duplicate relationships
-
+        unique_together = ('trainer', 'client')  # Prevent duplicate relationships
     def __str__(self):
         return f"{self.trainer.username} - {self.client.username}"
 
@@ -73,10 +72,20 @@ class TrainerClient(models.Model):
 # UserProfile model
 class UserProfile(models.Model):
     user = models.OneToOneField(FitTrackerUser, on_delete=models.CASCADE, related_name='profile')
-    height = models.FloatField()  # Height in feet e.g (5.6 is five and a falf feet)
+    height_feet = models.IntegerField(null=True, blank=True, default=0)  # Height in feet (e.g., 5)
+    height_inches = models.IntegerField(null=True, blank=True, default=0)  # Height in inches (e.g., 6)
     weight = models.FloatField()  # Weight in LBS e.g (125.7 lbs)
     age = models.IntegerField()
     fitness_goals = models.TextField()  # Store goals as text
+
+    @property
+    def full_height(self):
+        if self.height_feet is None or self.height_inches is None:
+            return "Not set"
+        return f"{self.height_feet}'{self.height_inches}\""
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile - {self.full_height}"
 
 # TODO: Create WorkoutPlan model
 # - Should store workout routines created by trainers, or user created
@@ -113,7 +122,7 @@ class WorkoutPlan(models.Model):
 # Progress model with date field
 class Progress(models.Model):
     user = models.ForeignKey(FitTrackerUser, on_delete=models.CASCADE, related_name='progress')
-    weight = models.FloatField()  # Weight in lbs check UserProfile
+    weight = models.FloatField()  # Weight in lbs check UserProfile 
     workout_completion = models.IntegerField()  # Track workout sessions completed
     progress_photo = models.ImageField(upload_to='progress_photos/', null=True, blank=True)  # Optional photo
     recorded_at = models.DateTimeField(auto_now_add=True)  # Automatically records the date when entry is created
@@ -134,7 +143,7 @@ class ExerciseLog(models.Model):
     workout_session = models.ForeignKey(WorkoutHistory, on_delete=models.CASCADE, related_name='exercise_logs')
     sets = models.IntegerField()
     reps = models.IntegerField()
-    weight = models.FloatField()  # Weight used in kilograms
+    weight = models.FloatField()  # Weight used in lbs
     recorded_at = models.DateTimeField(auto_now_add=True)  # Automatically records the date when entry is created
 
     def __str__(self):
