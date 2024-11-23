@@ -15,6 +15,7 @@ import SystemSettings from "./pages/admin/SystemSettings";
 import TrainerDashboard from "./pages/trainer/TrainerDashboard";
 import ClientProfile from "./pages/trainer/ClientProfile";
 import ProfileInfo from "./pages/ProfileInfo";
+import WorkoutLogs from "./pages/WorkoutLogs";
 
 // Protected Route component for admin access
 const AdminRoute = ({ children }) => {
@@ -99,6 +100,15 @@ function App() {
                     }
                   />
                 </Routes>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/workout-logs"
+            element={
+              <ProtectedRoute allowedRoles={["user", "trainer", "admin"]}>
+                <WorkoutLogs />
               </ProtectedRoute>
             }
           />

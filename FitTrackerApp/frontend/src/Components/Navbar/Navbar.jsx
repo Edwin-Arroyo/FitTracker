@@ -21,6 +21,9 @@ const Navbar = () => {
       <div className="nav-links">
         {isAuthenticated ? (
           <>
+            <Link to="/profile" className="nav-button">
+              Profile
+            </Link>
             <button onClick={handleLogout} className="nav-button">
               Logout
             </button>

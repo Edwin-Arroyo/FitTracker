@@ -7,10 +7,10 @@ import "./WorkoutLog.css";
 const WorkoutLog = () => {
   const navigate = useNavigate();
   const [workoutData, setWorkoutData] = useState({
-    duration: "",
-    calories: "",
     exerciseName: "",
     description: "",
+    duration: "",
+    calories: "",
   });
   const [error, setError] = useState("");
 
@@ -47,7 +47,28 @@ const WorkoutLog = () => {
         throw new Error("Failed to log workout");
       }
 
-      navigate("/profile");
+      // Store workout in localStorage
+      const newWorkout = {
+        ...workoutData,
+        duration: parseInt(workoutData.duration),
+        calories: parseInt(workoutData.calories),
+        date: new Date().toISOString()
+      };
+
+      const existingWorkouts = JSON.parse(localStorage.getItem('workoutLogs') || '[]');
+      existingWorkouts.push(newWorkout);
+
+      // Keep only last 15 days of workouts
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      
+      const filteredWorkouts = existingWorkouts.filter(workout => 
+        new Date(workout.date) >= fifteenDaysAgo
+      );
+
+      localStorage.setItem('workoutLogs', JSON.stringify(filteredWorkouts));
+
+      navigate("/workout-logs");
     } catch (err) {
       setError(err.message);
     }
@@ -59,7 +80,6 @@ const WorkoutLog = () => {
       <div className="workout-log-container">
         <h1>Log Your Workout</h1>
         {error && <div className="error-message">{error}</div>}
-
         <form onSubmit={handleSubmit} className="workout-form">
           <div className="form-group">
             <label htmlFor="exerciseName">Exercise Name</label>
@@ -72,19 +92,6 @@ const WorkoutLog = () => {
               required
             />
           </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              value={workoutData.description}
-              onChange={handleChange}
-              required
-              rows="3"
-            />
-          </div>
-
           <div className="form-group">
             <label htmlFor="duration">Duration (minutes)</label>
             <input
@@ -94,10 +101,8 @@ const WorkoutLog = () => {
               value={workoutData.duration}
               onChange={handleChange}
               required
-              min="1"
             />
           </div>
-
           <div className="form-group">
             <label htmlFor="calories">Calories Burned</label>
             <input
@@ -107,10 +112,18 @@ const WorkoutLog = () => {
               value={workoutData.calories}
               onChange={handleChange}
               required
-              min="0"
             />
           </div>
-
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={workoutData.description}
+              onChange={handleChange}
+              required
+            />
+          </div>
           <button type="submit" className="submit-button">
             Log Workout
           </button>

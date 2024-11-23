@@ -228,7 +228,7 @@ const Profile = () => {
               </button>
             </div>
             <div className="stat-card">
-              <h3>Total Time</h3>
+              <h3>Total Workout Time</h3>
               <p className="stat-number">{stats.total_duration}</p>
               <p className="stat-label">Minutes</p>
             </div>
@@ -247,6 +247,15 @@ const Profile = () => {
               <h3>Calories Burned</h3>
               <p className="stat-number">{stats.calories_burned}</p>
               <p className="stat-label">From Workouts</p>
+            </div>
+            <div className="stat-card">
+              <h3>Workout History</h3>
+              <button
+                onClick={() => navigate("/workout-logs")}
+                className="action-button"
+              >
+                View Workout Logs
+              </button>
             </div>
           </div>
         </div>

@@ -62,3 +62,51 @@
     border-radius: 4px;
     background: #f8d7da;
   }
+  
+  .workout-logs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 140px);
+  }
+  
+  .logs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+  
+  .log-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .log-header h3 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .log-date {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .log-details p {
+    margin: 0.5rem 0;
+  }
+  
+  .log-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
