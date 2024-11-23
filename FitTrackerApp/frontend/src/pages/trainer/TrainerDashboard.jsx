@@ -7,6 +7,13 @@ const TrainerDashboard = () => {
   const [clients, setClients] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    handleLogout();
+    localStorage.clear();
+    navigate('/login');
+  };
 
   // Fetch trainer's clients from the backend
   const fetchClients = async () => {
@@ -52,7 +59,12 @@ const TrainerDashboard = () => {
 
   return (
     <div className="trainer-dashboard">
-      <h1>Trainer Dashboard</h1>
+      <div className="dashboard-header">
+        <h1>Trainer Dashboard</h1>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
       
       {/* Client Statistics */}
       <div className="dashboard-stats">
