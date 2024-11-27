@@ -5,17 +5,18 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import WorkoutLog from "./pages/WorkoutLog";
-import Macros from "./pages/Macros";
+import Profile from "./User/Profile";
+import WorkoutLog from "./User/WorkoutLog";
+import Macros from "./User/Macros";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import SystemSettings from "./pages/admin/SystemSettings";
 import TrainerDashboard from "./pages/trainer/TrainerDashboard";
 import ClientProfile from "./pages/trainer/ClientProfile";
-import ProfileInfo from "./pages/ProfileInfo";
-import WorkoutLogs from "./pages/WorkoutLogs";
+import ProfileInfo from "./User/ProfileInfo";
+import WorkoutLogs from "./User/WorkoutLogs";
+import AssignedWorkouts from "./User/AssignedWorkouts";
 
 // Protected Route component for admin access
 const AdminRoute = ({ children }) => {
@@ -111,6 +112,15 @@ function App() {
                 <WorkoutLogs />
               </ProtectedRoute>
             }
+          />
+
+          <Route 
+            path="/user/assigned-workouts" 
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <AssignedWorkouts />
+              </ProtectedRoute>
+            } 
           />
         </Routes>
       </BrowserRouter>

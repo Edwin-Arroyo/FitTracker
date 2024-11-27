@@ -7,10 +7,18 @@ const ClientProfile = () => {
   // State management for different types of client data
   const [clientData, setClientData] = useState(null);      // Basic user info
   const [workoutHistory, setWorkoutHistory] = useState([]); // Workout records
-  const [progress, setProgress] = useState([]);             // Progress tracking
   const [error, setError] = useState("");                   // Error handling
   const [profileData, setProfileData] = useState(null);     // Profile details
   
+  // Add new state for workout form
+  const [workoutForm, setWorkoutForm] = useState({
+    exerciseName: '',
+    description: '',
+    duration: '',
+    calories: ''
+  });
+  const [showWorkoutForm, setShowWorkoutForm] = useState(false);
+
   // Get clientId from URL parameters
   const { clientId } = useParams();
   const { user } = useAuth();
@@ -67,29 +75,6 @@ const ClientProfile = () => {
     }
   };
 
-  // Fetch client's progress data (weight changes, workout completion)
-  const fetchProgress = async () => {
-    try {
-      const trainerId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(
-        `http://localhost:8000/api/users/${clientId}/progress/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to fetch progress data");
-      const data = await response.json();
-      setProgress(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   // Fetch client's profile information (height, weight, age, goals)
   const fetchProfileData = async () => {
     try {
@@ -122,11 +107,105 @@ const ClientProfile = () => {
     }
   };
 
+  // Handle workout form input changes
+  const handleWorkoutInputChange = (e) => {
+    const { name, value } = e.target;
+    setWorkoutForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle workout submission
+  const handleWorkoutSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:8000/api/trainer/assign-workout/${clientId}/`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(workoutForm)
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to assign workout");
+      
+      setWorkoutForm({
+        exerciseName: '',
+        description: '',
+        duration: '',
+        calories: ''
+      });
+      setShowWorkoutForm(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Replace the Progress Tracking section with this new Add Workout section
+  const renderWorkoutForm = () => (
+    <form onSubmit={handleWorkoutSubmit} className="workout-form">
+      <div className="form-group">
+        <label>Exercise Name:</label>
+        <input
+          type="text"
+          name="exerciseName"
+          value={workoutForm.exerciseName}
+          onChange={handleWorkoutInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Description:</label>
+        <textarea
+          name="description"
+          value={workoutForm.description}
+          onChange={handleWorkoutInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Duration (minutes):</label>
+        <input
+          type="number"
+          name="duration"
+          value={workoutForm.duration}
+          onChange={handleWorkoutInputChange}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Calories:</label>
+        <input
+          type="number"
+          name="calories"
+          value={workoutForm.calories}
+          onChange={handleWorkoutInputChange}
+          required
+        />
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="submit-btn">Add Workout</button>
+        <button 
+          type="button" 
+          className="cancel-btn"
+          onClick={() => setShowWorkoutForm(false)}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+
   // Fetch all client data when component mounts or clientId changes
   useEffect(() => {
     fetchClientData();
     fetchWorkoutHistory();
-    fetchProgress();
     fetchProfileData();
   }, [clientId]);
 
@@ -171,18 +250,19 @@ const ClientProfile = () => {
         <p>{profileData?.fitness_goals}</p>
       </section>
 
-      {/* Progress Tracking */}
+      {/* Add Workout Section */}
       <section className="profile-section">
-        <h2>Progress</h2>
-        <div className="progress-chart">
-          {progress.map((entry) => (
-            <div key={entry.id} className="progress-entry">
-              <span className="date">{new Date(entry.recorded_at).toLocaleDateString()}</span>
-              <span className="weight">{entry.weight} lbs</span>
-              <span className="workouts">{entry.workout_completion} workouts</span>
-            </div>
-          ))}
-        </div>
+        <h2>Add Workout</h2>
+        {showWorkoutForm ? (
+          renderWorkoutForm()
+        ) : (
+          <button 
+            className="add-workout-btn"
+            onClick={() => setShowWorkoutForm(true)}
+          >
+            Add New Workout
+          </button>
+        )}
       </section>
 
       {/* Recent Workouts */}

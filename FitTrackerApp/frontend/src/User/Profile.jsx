@@ -29,6 +29,8 @@ const Profile = () => {
     age: 0,
     fitness_goals: ''
   });
+  // Add new state
+  const [assignedWorkouts, setAssignedWorkouts] = useState([]);
 
   // useEffect hook to fetch user data when component mounts
   useEffect(() => {
@@ -94,6 +96,34 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfileData();
+  }, []);
+
+  useEffect(() => {
+    const fetchAssignedWorkouts = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        
+        const response = await fetch(
+          `http://localhost:8000/api/users/${userId}/assigned-workouts/`,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setAssignedWorkouts(data);
+        }
+      } catch (err) {
+        console.error("Error fetching assigned workouts:", err);
+      }
+    };
+
+    fetchAssignedWorkouts();
   }, []);
 
   const fetchProfileData = async () => {
@@ -255,6 +285,17 @@ const Profile = () => {
                 className="action-button"
               >
                 View Workout Logs
+              </button>
+            </div>
+            <div className="stat-card">
+              <h3>Trainer Workouts</h3>
+              <p className="stat-number">{assignedWorkouts.length}</p>
+              <p className="stat-label">Assigned</p>
+              <button
+                onClick={() => navigate("/user/assigned-workouts")}
+                className="action-button"
+              >
+                View Assigned Workouts
               </button>
             </div>
           </div>

@@ -1,12 +1,13 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from .models import FitTrackerUser, TrainerClient, WorkoutHistory, Nutrition, Progress, UserProfile
+from .models import FitTrackerUser, TrainerClient, WorkoutHistory, Nutrition, Progress, UserProfile, AssignedWorkout
 from .serializers import (
     UserSerializer, 
     NutritionSerializer,
     ExerciseSerializer,
     WorkoutHistorySerializer,
+    AssignedWorkoutSerializer,
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -483,3 +484,34 @@ def user_profile(request, user_id):
 
     except FitTrackerUser.DoesNotExist:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@csrf_exempt
+@api_view(['POST'])
+def assign_workout(request, client_id):
+    try:
+        trainer_id = request.headers.get('Authorization').split(' ')[1]
+        workout_data = {
+            'trainer': trainer_id,
+            'client': client_id,
+            'exercise_name': request.data.get('exerciseName'),
+            'description': request.data.get('description'),
+            'duration': request.data.get('duration'),
+            'calories': request.data.get('calories')
+        }
+        serializer = AssignedWorkoutSerializer(data=workout_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@csrf_exempt
+@api_view(['GET'])
+def get_assigned_workouts(request, user_id):
+    try:
+        workouts = AssignedWorkout.objects.filter(client_id=user_id)
+        serializer = AssignedWorkoutSerializer(workouts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

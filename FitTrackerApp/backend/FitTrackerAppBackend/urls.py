@@ -30,7 +30,9 @@ from .views import (
     assign_trainer,
     client_workout_history,
     client_progress,
-    user_profile    
+    user_profile,
+    assign_workout,
+    get_assigned_workouts
 )
 from rest_framework.urlpatterns import format_suffix_patterns
 
@@ -51,6 +53,8 @@ urlpatterns = [
          path('users/<int:client_id>/workout-history/', client_workout_history, name='client_workout_history'),
         path('users/<int:client_id>/progress/', client_progress, name='client_progress'),
         path('users/<int:user_id>/profile/', user_profile, name='user_profile'),
+        path('trainer/assign-workout/<int:client_id>/', assign_workout, name='assign_workout'),
+        path('users/<int:user_id>/assigned-workouts/', get_assigned_workouts, name='get_assigned_workouts'),
     ])),
 ]
 

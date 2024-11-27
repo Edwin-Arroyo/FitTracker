@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Exercise, WorkoutHistory, Nutrition, FitTrackerUser
+from .models import Exercise, WorkoutHistory, Nutrition, FitTrackerUser, AssignedWorkout
 
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,3 +34,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return FitTrackerUser.objects.create(**validated_data)
+
+class AssignedWorkoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssignedWorkout
+        fields = ['id', 'trainer', 'client', 'exercise_name', 'description', 
+                 'duration', 'calories', 'assigned_date', 'completed', 'completed_date']

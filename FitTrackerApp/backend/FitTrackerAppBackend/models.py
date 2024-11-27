@@ -169,3 +169,18 @@ class Nutrition(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - Nutrition on {self.recorded_at}"
+    
+    # Trainer assigned workouts to clients 
+class AssignedWorkout(models.Model):
+    trainer = models.ForeignKey(FitTrackerUser, on_delete=models.CASCADE, related_name='assigned_workouts')
+    client = models.ForeignKey(FitTrackerUser, on_delete=models.CASCADE, related_name='received_workouts')
+    exercise_name = models.CharField(max_length=100)
+    description = models.TextField()
+    duration = models.IntegerField()  # Duration in minutes
+    calories = models.IntegerField()
+    assigned_date = models.DateTimeField(auto_now_add=True)
+    completed = models.BooleanField(default=False)
+    completed_date = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.trainer.username} assigned {self.exercise_name} to {self.client.username}"

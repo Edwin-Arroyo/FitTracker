@@ -10,7 +10,7 @@ const TrainerDashboard = () => {
   const { logout } = useAuth();
 
   const handleLogout = () => {
-    handleLogout();
+    logout();
     localStorage.clear();
     navigate('/login');
   };
