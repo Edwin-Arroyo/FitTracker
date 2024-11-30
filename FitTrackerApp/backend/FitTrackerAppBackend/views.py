@@ -515,3 +515,44 @@ def get_assigned_workouts(request, user_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Client can mark a trainer assigned workout as complete
+@csrf_exempt
+@api_view(['POST'])
+def complete_workout(request, workout_id):
+    try:
+        # Get the workout
+        workout = AssignedWorkout.objects.get(pk=workout_id)
+        
+        # Verify the client is the one completing the workout
+        auth_token = request.headers.get('Authorization').split(' ')[1]
+        client_id = int(auth_token)
+        
+        if workout.client.id != client_id:
+            return Response(
+                {'error': 'Not authorized to complete this workout'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Mark as complete
+        workout.completed = True
+        workout.completed_date = timezone.now()
+        workout.save()
+        
+        return Response({
+            'id': workout.id,
+            'completed': workout.completed,
+            'completed_date': workout.completed_date
+        }, status=status.HTTP_200_OK)
+        
+    except AssignedWorkout.DoesNotExist:
+        return Response(
+            {'error': 'Workout not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
