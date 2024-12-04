@@ -181,7 +181,7 @@ const AdminDashboard = () => {
           className="user-management-btn"
           onClick={handleNavigateToUserManagement}
         >
-          User-Trainer Management
+          User Management
         </button>
       </div>
 
@@ -230,7 +230,7 @@ const AdminDashboard = () => {
 
       {/* Users Table */}
       <div className="users-table">
-        <h2>User Management</h2>
+        <h2>User-Trainer Management</h2>
         <table>
           <thead>
             <tr>

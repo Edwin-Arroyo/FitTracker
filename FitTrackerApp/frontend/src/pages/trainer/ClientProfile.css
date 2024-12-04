@@ -71,20 +71,6 @@
     color: #666;
   }
   
-  @media (max-width: 768px) {
-    .client-profile {
-      padding: 1rem;
-    }
-    
-    .info-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .progress-entry {
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-    }
-  }
   
   .workout-form {
     max-width: 600px;
