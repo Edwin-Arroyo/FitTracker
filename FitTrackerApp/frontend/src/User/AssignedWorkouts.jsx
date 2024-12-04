@@ -85,7 +85,7 @@ const AssignedWorkouts = () => {
   };
 
  
-  if (loading) return <div className="loading">Loading...</div>;
+
   // error message if fetch failed
   if (error) return <div className="error">{error}</div>;
 

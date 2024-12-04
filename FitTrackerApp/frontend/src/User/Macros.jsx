@@ -6,23 +6,20 @@ import "./Macros.css";
 
 // Macros component handles tracking of daily macronutrient intake
 const Macros = () => {
-  // Initialize navigation utility for redirecting after form submission
+  // navigation
   const navigate = useNavigate();
 
-  // Initialize form state with empty macronutrient values
-  // This state updates as user inputs their macro consumption
+  // form for macros
   const [macroData, setMacroData] = useState({
     carbs: "",
     protein: "",
     fat: "",
   });
 
-  // State to handle and display error messages
+  // handle and display error messages
   const [error, setError] = useState("");
 
-  // handleChange: Updates form state when input fields change
-  // - Preserves existing macro data using spread operator
-  // - Updates only the changed field using computed property name
+  // handleChange: potential update to macros
   const handleChange = (e) => {
     const { name, value } = e.target;
     setMacroData((prev) => ({
@@ -68,10 +65,10 @@ const Macros = () => {
     }
   };
 
-  // Render macro tracking form with:
+  //  macro tracking form with:
   // - Error message display
   // - Input fields for carbs, protein, and fat
-  // - Submit button to calculate total calories
+  // - Submit button to calculate total calories, done in backend 
   return (
     <>
       <Navbar />
@@ -81,7 +78,7 @@ const Macros = () => {
 
         <form onSubmit={handleSubmit} className="macros-form">
           {/* Input groups for each macronutrient */}
-          {/* Each input is a number type with minimum value of 0 */}
+          {/* Each input is a number - can handle all types of numeric input */}
           <div className="form-group">
             <label htmlFor="carbs">Carbohydrates (g)</label>
             <input

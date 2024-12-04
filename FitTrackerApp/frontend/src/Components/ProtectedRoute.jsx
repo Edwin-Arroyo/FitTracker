@@ -1,25 +1,24 @@
 import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 // ProtectedRoute component that wraps protected pages/routes
 // Parameters:
 // - children: The components/pages that should be protected
 // - allowedRoles: Array of roles that are allowed to access this route
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const userRole = localStorage.getItem("userRole");
+  const { isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
 
-  // If no userRole, redirect to login
-  if (!userRole) {
-    return <Navigate to="/login" />;
-  }
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else if (!allowedRoles.includes(userRole)) {
+      navigate("/"); // or wherever you want to redirect unauthorized users
+    }
+  }, [isAuthenticated, userRole, allowedRoles, navigate]);
 
-  // If user's role is not allowed, redirect to home
-  if (!allowedRoles.includes(userRole)) {
-    return <Navigate to="/profile" />;
-  }
-
-  return children;
+  return isAuthenticated && allowedRoles.includes(userRole) ? children : null;
 };
 
 export default ProtectedRoute;

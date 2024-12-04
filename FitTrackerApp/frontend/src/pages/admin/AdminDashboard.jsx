@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
-  // State management for dashboard data, error handling, and form visibility
+  //  dashboard data, error handling, and form visibility
   const [dashboardData, setDashboardData] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -46,7 +46,9 @@ const AdminDashboard = () => {
   // Fetch trainers for dropdown
   const fetchTrainers = async () => {
     try {
-      const trainersData = dashboardData.users.filter(user => user.role === 'trainer');
+      const trainersData = dashboardData.users.filter(
+        (user) => user.role === "trainer"
+      );
       setTrainers(trainersData);
     } catch (err) {
       setError(err.message);
@@ -133,14 +135,19 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     logout();
     localStorage.clear();
-    navigate('/login');
+    navigate("/login");
+  };
+
+  
+  const handleNavigateToUserManagement = () => {
+    navigate("/admin/users");
   };
 
   // Error and loading states
   if (error) return <div className="error-message">{error}</div>;
   if (!dashboardData) return <div>Loading...</div>;
 
-  // Main dashboard render
+  // Main dashboard 
   return (
     <div className="admin-dashboard">
       <div className="dashboard-header">
@@ -162,7 +169,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Trainer Creation Button */}
+      {/* Admin Actions - Updated with new button */}
       <div className="admin-actions">
         <button
           className="create-trainer-btn"
@@ -170,9 +177,15 @@ const AdminDashboard = () => {
         >
           {showTrainerForm ? "Cancel" : "Create New Trainer"}
         </button>
+        <button
+          className="user-management-btn"
+          onClick={handleNavigateToUserManagement}
+        >
+          User-Trainer Management
+        </button>
       </div>
 
-      {/* Conditional Trainer Creation Form */}
+      {/*  Trainer Creation Form */}
       {showTrainerForm && (
         <div className="trainer-form-container">
           <h2>Create New Trainer</h2>
@@ -236,11 +249,13 @@ const AdminDashboard = () => {
                 <td>{getRoleDisplay(user.role)}</td>
                 <td>{new Date(user.created_at).toLocaleDateString()}</td>
                 <td>
-                  {user.role === 'user' && (
+                  {user.role === "user" && (
                     <td>
                       {user.assigned_trainer ? (
                         <div className="assigned-trainer">
-                          <span>Assigned to: {user.assigned_trainer.username}</span>
+                          <span>
+                            Assigned to: {user.assigned_trainer.username}
+                          </span>
                           <button
                             className="reassign-btn"
                             onClick={() => setSelectedTrainer("")}

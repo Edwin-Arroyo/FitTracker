@@ -5,72 +5,57 @@ import Footer from "../../Components/Footer/Footer";
 import "./AdminDashboard.css";
 
 const UserManagement = () => {
-  // Initialize state variables for managing users data
+  //  managing users data
   const [users, setUsers] = useState([]); // Array to store user data
-  const [isLoading, setIsLoading] = useState(true); // Loading state flag
-  const [error, setError] = useState(null); // Error state for handling API errors
+  const [isLoading, setIsLoading] = useState(true); 
+  const [error, setError] = useState(null); // API errors
+  const [searchUser, setSearchUser] = useState(""); //  admin can search for users by username
 
-  // Effect hook to fetch users when component mounts
+ 
   useEffect(() => {
     fetchUsers();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []); 
 
-  // Function to fetch all users from the backend API
+  // fetch all users from the backend 
   const fetchUsers = async () => {
     try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      
       // Make API request with authentication token
-      const response = await fetch("/api/admin/users", {
+      const response = await fetch("http://localhost:8000/api/users/", {
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setUsers(data); // Update users state with fetched data
-      setIsLoading(false); // Set loading to false after successful fetch
+      console.log("Fetched users:", data); 
+      setUsers(data);
     } catch (err) {
-      setError("Failed to fetch users"); // Set error message if fetch fails
-      setIsLoading(false); // Set loading to false even if fetch fails
+      console.error("Error fetching users:", err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Function to update a user's role (e.g., from user to trainer)
-  const updateUserRole = async (userId, newRole) => {
-    try {
-      // Make API request to update user role
-      await fetch(`/api/admin/users/${userId}/role`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ role: newRole }),
-      });
-      fetchUsers(); // Refresh user list after successful update
-    } catch (err) {
-      setError("Failed to update user role"); // Set error if update fails
-    }
+  // Filter users based on search User
+  const filteredUsers = users.filter(user =>
+    user.username.toLowerCase().includes(searchUser.toLowerCase())
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchUser(e.target.value);
   };
 
-  // Function to toggle user account status (active/inactive)
-  const toggleUserStatus = async (userId, isActive) => {
-    try {
-      // Make API request to update user status
-      await fetch(`/api/admin/users/${userId}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ isActive }),
-      });
-      fetchUsers(); // Refresh user list after successful status update
-    } catch (err) {
-      setError("Failed to update user status"); // Set error if update fails
-    }
-  };
-
-  // Show loading message while fetching data
-  if (isLoading) return <p>Loading users...</p>;
   // Show error message if something went wrong
   if (error) return <p>Error: {error}</p>;
 
@@ -80,67 +65,52 @@ const UserManagement = () => {
       <Navbar />
       <div className="admin-container">
         <h1>User Management</h1>
-        {/* Search and filter controls */}
-        <div className="user-management-controls">
-          <input type="text" placeholder="Search users..." />
-          <select>
-            <option value="all">All Users</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+        
+        {/* Search Bar */}
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search by username"
+            value={searchUser}
+            onChange={handleSearchChange}
+            className="search-input"
+          />
         </div>
-        {/* User list table */}
-        <div className="user-list">
+        
+        {isLoading && <div>Loading users...</div>}
+        {error && <div className="error-message">{error}</div>}
+        
+        {!isLoading && !error && (
           <table className="user-table">
             <thead>
               <tr>
-                <th>Name</th>
+                <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Status</th>
+                <th>Created At</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {/* Map through users array to create table rows */}
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id}>
-                  <td>{user.name}</td>
+                  <td>{user.username}</td>
                   <td>{user.email}</td>
-                  {/* Role selection dropdown */}
+                  <td>{user.role}</td>
+                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
                   <td>
-                    <select
-                      value={user.role}
-                      onChange={(e) => updateUserRole(user.id, e.target.value)}
-                    >
-                      <option value="user">User</option>
-                      <option value="trainer">Trainer</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                  {/* Status toggle button */}
-                  <td>
-                    <button
-                      onClick={() => toggleUserStatus(user.id, !user.isActive)}
-                      className={user.isActive ? "active" : "inactive"}
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </button>
-                  </td>
-                  {/* Action buttons */}
-                  <td>
-                    <button onClick={() => handleViewUser(user.id)}>
-                      View
-                    </button>
-                    <button onClick={() => handleEditUser(user.id)}>
-                      Edit
-                    </button>
+                    <button onClick={() => handleViewUser(user.id)}>View</button>
+                    <button onClick={() => handleEditUser(user.id)}>Edit</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        )}
+        
+        {!isLoading && !error && filteredUsers.length === 0 && (
+          <div className="no-results">No users found matching "{searchUser}"</div>
+        )}
       </div>
       <Footer />
     </>

@@ -50,34 +50,35 @@ const Login = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
         },
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Invalid credentials");
-        }
-        throw new Error("Login failed");
+        throw new Error(data.message || "Invalid credentials");
       }
 
-      const data = await response.json();
+      // Store user data
+      localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.id);
       localStorage.setItem("userRole", data.role);
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("isAdmin", data.role === "admin");
 
+      // Update auth context
       login(data.role);
 
-      switch (data.role) {
-        case 'admin':
-          navigate("/admin/dashboard");
-          break;
-        case 'trainer':
-          navigate("/trainer/dashboard");
-          break;
-        default:
-          navigate("/profile");
+      // Debug log
+      console.log("User role:", data.role);
+
+      // Navigation based on role
+      if (data.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (data.role === "trainer") {
+        navigate("/trainer/dashboard");
+      } else {
+        navigate("/profile");
       }
     } catch (error) {
       console.error("Login error:", error);

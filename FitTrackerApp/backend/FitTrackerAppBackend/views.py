@@ -21,25 +21,43 @@ from datetime import datetime
 @csrf_exempt
 @api_view(['GET', 'POST'])
 def user_list(request):
-    if request.method == 'POST':
-        try:
-            serializer = UserSerializer(data=request.data)
-            if serializer.is_valid():
-                user = serializer.save()
-                return Response({
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'role': user.role,
-                    'created_at': user.created_at.isoformat()
-                }, status=status.HTTP_201_CREATED)
-            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'GET':
-        users = FitTrackerUser.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+    # Check for authentication token
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return Response(
+            {'error': 'Authorization header missing or invalid'}, 
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    
+    try:
+        token = auth_header.split(' ')[1]
+        requesting_user_id = int(token)
+        requesting_user = FitTrackerUser.objects.get(id=requesting_user_id)
+        
+        # Only allow admin users to access this endpoint
+        if requesting_user.role != 'admin':
+            return Response(
+                {'error': 'Unauthorized access'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if request.method == 'GET':
+            # Exclude admin users from the list
+            users = FitTrackerUser.objects.exclude(role='admin')
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data)
+            
+    except (ValueError, FitTrackerUser.DoesNotExist):
+        return Response(
+            {'error': 'Invalid authentication token'}, 
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    except Exception as e:
+        print(f"Error in user_list: {str(e)}")  # Debug log
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 # login_user - login a user, uses userID for token, no expiration or refresh token

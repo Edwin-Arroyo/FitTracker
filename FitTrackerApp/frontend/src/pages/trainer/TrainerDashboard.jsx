@@ -44,7 +44,7 @@ const TrainerDashboard = () => {
     }
   };
 
-  // Fetch clients on component mount
+  // Fetch clients 
   useEffect(() => {
     fetchClients();
   }, []);

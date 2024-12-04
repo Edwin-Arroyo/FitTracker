@@ -89,17 +89,10 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <Routes>
-                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="/" element={<Navigate to="/admin/dashboard" />} />
+                  <Route path="/dashboard" element={<AdminDashboard />} />
                   <Route path="/users" element={<UserManagement />} />
                   <Route path="/settings" element={<SystemSettings />} />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <AdminRoute>
-                        <AdminDashboard />
-                      </AdminRoute>
-                    }
-                  />
                 </Routes>
               </ProtectedRoute>
             }

@@ -8,13 +8,16 @@ const AuthContext = createContext(null);
 // AuthProvider component that wraps the app and provides authentication state
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
     setIsAuthenticated(!!userRole);
+    setUserRole(userRole);
   }, []);
 
   const login = (role) => {
+    setUserRole(role);
     setIsAuthenticated(true);
     localStorage.setItem("userRole", role || "user");
   };
@@ -26,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, userRole }}>
       {children}
     </AuthContext.Provider>
   );

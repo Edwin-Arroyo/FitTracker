@@ -147,7 +147,7 @@ const ClientProfile = () => {
     }
   };
 
-  // Replace the Progress Tracking section with this new Add Workout section
+  // 
   const renderWorkoutForm = () => (
     <form onSubmit={handleWorkoutSubmit} className="workout-form">
       <div className="form-group">
@@ -202,7 +202,7 @@ const ClientProfile = () => {
     </form>
   );
 
-  // Fetch all client data when component mounts or clientId changes
+  // Fetch all client data 
   useEffect(() => {
     fetchClientData();
     fetchWorkoutHistory();
@@ -211,10 +211,9 @@ const ClientProfile = () => {
 
   // Show error message if any fetch operation fails
   if (error) return <div className="error-message">{error}</div>;
-  // Show loading state while data is being fetched
-  if (!clientData || !profileData) return <div>Loading...</div>;
 
-  // Render client profile with all fetched data
+
+  // client profile with all fetched data
   return (
     <div className="client-profile">
       <h1>Client Profile</h1>

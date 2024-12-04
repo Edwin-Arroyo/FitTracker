@@ -6,7 +6,7 @@ import Footer from "../Components/Footer/Footer";
 import "./Profile.css";
 
 const Profile = () => {
-  // React Router hook for navigation
+  // navigation
   const navigate = useNavigate();
   // Get logout function from auth context
   const { logout } = useAuth();
@@ -29,10 +29,10 @@ const Profile = () => {
     age: 0,
     fitness_goals: ''
   });
-  // Add new state
+ 
   const [assignedWorkouts, setAssignedWorkouts] = useState([]);
 
-  // useEffect hook to fetch user data when component mounts
+  // fetch user data 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -194,8 +194,7 @@ const Profile = () => {
     }
   };
 
-  // Conditional rendering based on state
-  if (loading) return <div>Loading...</div>;
+ 
   if (error) return <div>Error: {error}</div>;
   if (!userData) return <div>No user data found</div>;
 
@@ -242,7 +241,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Fitness statistics section, hardcoded for now, get data from backend when model is implemented*/}
+        {/* Fitness statistics section - UPDATED, gets stats from backend*/}
         <div className="stats-container">
           <h2>Your Fitness Stats</h2>
           <div className="stats-grid">
