@@ -49,9 +49,40 @@ const Register = () => {
       }
 
       const data = await response.json();
+      
+      // Store all necessary data in localStorage
       localStorage.setItem("userId", data.id);
       localStorage.setItem("userRole", data.role);
+      localStorage.setItem("token", data.id); // Using ID as token for now
+      localStorage.setItem("username", data.username);
+      
+      // Update auth context
       login(data.role);
+
+      // Create initial profile
+      const profileResponse = await fetch(
+        `http://localhost:8000/api/users/${data.id}/profile/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${data.id}`,
+          },
+          body: JSON.stringify({
+            height_feet: 0,
+            height_inches: 0,
+            weight: 0,
+            age: 0,
+            fitness_goals: "",
+          }),
+        }
+      );
+
+      if (!profileResponse.ok) {
+        console.error("Failed to create initial profile");
+      }
+
+      // Navigate to profile page
       navigate("/profile");
     } catch (error) {
       console.error("Registration error:", error);

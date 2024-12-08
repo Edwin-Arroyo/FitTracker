@@ -5,40 +5,84 @@ import { useAuth } from "../../context/AuthContext";
 import "./Navbar.css";
 
 const Navbar = () => {
-  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { isAuthenticated, userRole, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  const renderAuthButtons = () => {
+    if (!isAuthenticated) {
+      return (
+        <>
+          <button className="nav-button" onClick={() => navigate("/register")}>
+            Register
+          </button>
+          <button className="nav-button" onClick={() => navigate("/login")}>
+            Login
+          </button>
+        </>
+      );
+    }
+
+    // User is authenticated, show role-specific buttons
+    switch (userRole) {
+      case "trainer":
+        return (
+          <>
+            <button
+              className="nav-button"
+              onClick={() => navigate("/trainer/dashboard")}
+            >
+              Dashboard
+            </button>
+            <button className="nav-button" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        );
+
+      case "admin":
+        return (
+          <>
+            <button
+              className="nav-button"
+              onClick={() => navigate("/admin/dashboard")}
+            >
+              Dashboard
+            </button>
+            <button className="nav-button" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        );
+
+      case "user":
+        return (
+          <>
+            <button className="nav-button" onClick={() => navigate("/profile")}>
+              Profile
+            </button>
+            <button className="nav-button" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
     <nav className="navbar">
-      <div className="nav-brand">
-        <Link to="/">FitTracker</Link>
+      <div className="navbar-brand">
+        <h1 onClick={() => navigate("/")}>FitTracker</h1>
       </div>
-      <div className="nav-links">
-        {isAuthenticated ? (
-          <>
-            <Link to="/profile" className="nav-button">
-              Profile
-            </Link>
-            <button onClick={handleLogout} className="nav-button">
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="nav-button">
-              Login
-            </Link>
-            <Link to="/register" className="nav-button">
-              Register
-            </Link>
-          </>
-        )}
-      </div>
+      <div className="navbar-links">{renderAuthButtons()}</div>
     </nav>
   );
 };

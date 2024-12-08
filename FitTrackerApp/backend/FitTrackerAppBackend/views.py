@@ -21,7 +21,40 @@ from datetime import datetime
 @csrf_exempt
 @api_view(['GET', 'POST'])
 def user_list(request):
-    # Check for authentication token
+    if request.method == 'POST':
+        # Registration - no auth required. was reequiring authentication before
+        try:
+            serializer = UserSerializer(data=request.data)
+            if serializer.is_valid():
+                user = serializer.save()
+                
+                # Create initial profile
+                UserProfile.objects.create(
+                    user=user,
+                    height_feet=0,
+                    height_inches=0,
+                    weight=0,
+                    age=0,
+                    fitness_goals=""
+                )
+                
+                return Response({
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'role': user.role,
+                    'token': str(user.id),  # Using ID as token for now
+                    'created_at': user.created_at
+                }, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Registration error: {str(e)}")
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    # For GET requests (listing users) - require authentication
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return Response(
@@ -34,18 +67,16 @@ def user_list(request):
         requesting_user_id = int(token)
         requesting_user = FitTrackerUser.objects.get(id=requesting_user_id)
         
-        # Only allow admin users to access this endpoint
+        # Only allow admin users to list all users
         if requesting_user.role != 'admin':
             return Response(
                 {'error': 'Unauthorized access'}, 
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        if request.method == 'GET':
-            # Exclude admin users from the list
-            users = FitTrackerUser.objects.exclude(role='admin')
-            serializer = UserSerializer(users, many=True)
-            return Response(serializer.data)
+        users = FitTrackerUser.objects.exclude(role='admin')
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
             
     except (ValueError, FitTrackerUser.DoesNotExist):
         return Response(
@@ -102,56 +133,44 @@ def login_user(request):
 
 # user_detail - get a user's details can be used to get a user's profile information for a trainer
 @csrf_exempt
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def user_detail(request, user_id):
     try:
+        # Get the requesting user's ID from the token
         auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return Response({'error': 'Authorization header missing'}, status=status.HTTP_401_UNAUTHORIZED)
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response(
+                {'error': 'Authorization header missing or invalid'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
         token = auth_header.split(' ')[1]
-        trainer_id = None
-        try:
-            trainer_id = int(token)
-        except (ValueError, TypeError):
-            return Response({'error': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
-
+        requesting_user_id = int(token)
+        
+        # Get the requested user
         user = FitTrackerUser.objects.get(pk=user_id)
         
-        # Check if requesting user is a trainer assigned to this user
-        trainer_client = TrainerClient.objects.filter(
-            trainer_id=trainer_id,
-            client=user,
-            is_active=True
+        # Check if requester is the user themselves or their trainer
+        is_trainer = TrainerClient.objects.filter(
+            trainer_id=requesting_user_id,
+            client_id=user_id
         ).exists()
         
-        if not trainer_client and trainer_id != user_id:
-            return Response({'error': 'Not authorized to view this profile'}, 
-                          status=status.HTTP_403_FORBIDDEN)
-
-        profile = UserProfile.objects.filter(user=user).first()
-        
-        response_data = {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'role': user.role,
-            'created_at': user.created_at.isoformat(),
-            'profile': None
-        }
-        
-        if profile:
-            response_data['profile'] = {
-                'height_feet': profile.height_feet,
-                'height_inches': profile.height_inches,
-                'weight': profile.weight,
-                'age': profile.age,
-                'fitness_goals': profile.fitness_goals
-            }
+        if requesting_user_id != int(user_id) and not is_trainer:
+            return Response(
+                {'error': 'You do not have permission to access this data'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
             
-        return Response(response_data, status=status.HTTP_200_OK)
-    except FitTrackerUser.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+            
+    except Exception as e:
+        print(f"Error in user_detail: {str(e)}")
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 # log_exercise - log an exercise
 @csrf_exempt
@@ -331,29 +350,45 @@ def create_trainer(request):
 @api_view(['GET'])
 def trainer_clients(request, trainer_id):
     try:
-        # Get all active client relationships for this trainer
-        trainer_clients = TrainerClient.objects.filter(
-            trainer_id=trainer_id,
-            is_active=True
-        ).select_related('client')
+        # Verify trainer's token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response(
+                {'error': 'Authorization header missing or invalid'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
+        token = auth_header.split(' ')[1]
+        requesting_user_id = int(token)
+        
+        # Verify this is the trainer's own dashboard
+        if requesting_user_id != int(trainer_id):
+            return Response(
+                {'error': 'Unauthorized access'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get trainer's clients through TrainerClient relationship
+        trainer_clients = TrainerClient.objects.filter(trainer_id=trainer_id)
         clients_data = []
+        
         for tc in trainer_clients:
+            client = tc.client
             clients_data.append({
-                'id': tc.client.id,
-                'username': tc.client.username,
-                'email': tc.client.email,
-                'start_date': tc.start_date.isoformat(),
+                'id': client.id,
+                'username': client.username,
+                'email': client.email,
+                'start_date': tc.start_date,
                 'is_active': tc.is_active
             })
-            
-        return Response({
-            'clients': clients_data
-        }, status=status.HTTP_200_OK)
+        
+        return Response({'clients': clients_data})
+        
     except Exception as e:
+        print(f"Error in trainer_clients: {str(e)}")
         return Response(
             {'error': str(e)}, 
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 # admin will assign a trainer to a client 
@@ -427,81 +462,53 @@ def client_progress(request, client_id):
 @api_view(['GET', 'POST'])
 def user_profile(request, user_id):
     try:
+        # Verify token and get requesting user
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'error': 'Authorization header missing or invalid'}, 
-                          status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'error': 'Authorization header missing or invalid'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
         token = auth_header.split(' ')[1]
-        requesting_user_id = None
-        try:
-            requesting_user_id = int(token)
-        except (ValueError, TypeError):
-            return Response({'error': 'Invalid token'}, 
-                          status=status.HTTP_401_UNAUTHORIZED)
-
-        user = FitTrackerUser.objects.get(pk=user_id)
-
-        # Check if requesting user is a trainer assigned to this user
-        trainer_client = TrainerClient.objects.filter(
+        requesting_user_id = int(token)
+        
+        # Check if requester is the user themselves or their trainer
+        is_trainer = TrainerClient.objects.filter(
             trainer_id=requesting_user_id,
-            client=user,
-            is_active=True
+            client_id=user_id
         ).exists()
         
-        if not trainer_client and str(requesting_user_id) != str(user_id):
-            return Response({'error': 'Not authorized'}, 
-                          status=status.HTTP_403_FORBIDDEN)
-
-        if request.method == 'POST':
-            # Convert string values to appropriate types
-            try:
-                height_feet = int(request.data.get('height_feet', 0))
-                height_inches = int(request.data.get('height_inches', 0))
-                weight = float(request.data.get('weight', 0))
-                age = int(request.data.get('age', 0))
-                fitness_goals = request.data.get('fitness_goals', '')
-            except (ValueError, TypeError):
-                return Response({'error': 'Invalid data format'}, 
-                              status=status.HTTP_400_BAD_REQUEST)
-
-            # Update or create profile with validated data
-            profile, created = UserProfile.objects.update_or_create(
-                user=user,
-                defaults={
-                    'height_feet': height_feet,
-                    'height_inches': height_inches,
-                    'weight': weight,
-                    'age': age,
-                    'fitness_goals': fitness_goals
-                }
+        if requesting_user_id != int(user_id) and not is_trainer:
+            return Response(
+                {'error': 'You do not have permission to access this profile'}, 
+                status=status.HTTP_403_FORBIDDEN
             )
-            
-            profile_data = {
-                'height_feet': profile.height_feet,
-                'height_inches': profile.height_inches,
-                'weight': profile.weight,
-                'age': profile.age,
-                'fitness_goals': profile.fitness_goals,
-            }
-            return Response(profile_data, status=status.HTTP_200_OK)
 
-        # GET request handling
         try:
-            profile = UserProfile.objects.get(user=user)
-            profile_data = {
+            profile = UserProfile.objects.get(user_id=user_id)
+            return Response({
                 'height_feet': profile.height_feet,
                 'height_inches': profile.height_inches,
                 'weight': profile.weight,
                 'age': profile.age,
-                'fitness_goals': profile.fitness_goals,
-            }
-            return Response(profile_data, status=status.HTTP_200_OK)
+                'fitness_goals': profile.fitness_goals
+            })
         except UserProfile.DoesNotExist:
-            return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                'height_feet': 0,
+                'height_inches': 0,
+                'weight': 0,
+                'age': 0,
+                'fitness_goals': ''
+            })
 
-    except FitTrackerUser.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error in user_profile: {str(e)}")
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @csrf_exempt
 @api_view(['POST'])

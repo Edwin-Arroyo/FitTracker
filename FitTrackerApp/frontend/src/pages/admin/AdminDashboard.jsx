@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import Navbar from "../../Components/Navbar/Navbar";
+import Footer from "../../Components/Footer/Footer";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
@@ -144,156 +146,170 @@ const AdminDashboard = () => {
   };
 
   // Error and loading states
-  if (error) return <div className="error-message">{error}</div>;
-  if (!dashboardData) return <div>Loading...</div>;
+  if (error) return (
+    <>
+      <Navbar />
+      <div className="error-message">{error}</div>
+      <Footer />
+    </>
+  );
+  
+  if (!dashboardData) return (
+    <>
+      <Navbar />
+      <div>Loading...</div>
+      <Footer />
+    </>
+  );
 
   // Main dashboard 
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <h3>Total Users</h3>
-          <p>{dashboardData?.total_users || 0}</p>
+    <>
+      <Navbar />
+      <div className="admin-dashboard">
+        <div className="dashboard-header">
+          <h1>Admin Dashboard</h1>
         </div>
-        <div className="stat-card">
-          <h3>Total Trainers</h3>
-          <p>{dashboardData?.total_trainers || 0}</p>
+
+        {/* Stats Cards */}
+        <div className="dashboard-stats">
+          <div className="stat-card">
+            <h3>Total Users</h3>
+            <p>{dashboardData?.total_users || 0}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Total Trainers</h3>
+            <p>{dashboardData?.total_trainers || 0}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Admin Actions - Updated with new button */}
-      <div className="admin-actions">
-        <button
-          className="create-trainer-btn"
-          onClick={() => setShowTrainerForm(!showTrainerForm)}
-        >
-          {showTrainerForm ? "Cancel" : "Create New Trainer"}
-        </button>
-        <button
-          className="user-management-btn"
-          onClick={handleNavigateToUserManagement}
-        >
-          User Management
-        </button>
-      </div>
-
-      {/*  Trainer Creation Form */}
-      {showTrainerForm && (
-        <div className="trainer-form-container">
-          <h2>Create New Trainer</h2>
-          <form onSubmit={handleCreateTrainer}>
-            <div className="form-group">
-              <label>Username:</label>
-              <input
-                type="text"
-                value={trainerData.username}
-                onChange={(e) =>
-                  setTrainerData({ ...trainerData, username: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Email:</label>
-              <input
-                type="email"
-                value={trainerData.email}
-                onChange={(e) =>
-                  setTrainerData({ ...trainerData, email: e.target.value })
-                }
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Password:</label>
-              <input
-                type="password"
-                value={trainerData.password}
-                onChange={(e) =>
-                  setTrainerData({ ...trainerData, password: e.target.value })
-                }
-                required
-              />
-            </div>
-            <button type="submit">Create Trainer</button>
-          </form>
+        {/* Admin Actions - Updated with new button */}
+        <div className="admin-actions">
+          <button
+            className="create-trainer-btn"
+            onClick={() => setShowTrainerForm(!showTrainerForm)}
+          >
+            {showTrainerForm ? "Cancel" : "Create New Trainer"}
+          </button>
+          <button
+            className="user-management-btn"
+            onClick={handleNavigateToUserManagement}
+          >
+            User Management
+          </button>
         </div>
-      )}
 
-      {/* Users Table */}
-      <div className="users-table">
-        <h2>User-Trainer Management</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Type</th>
-              <th>Created At</th>
-              <th>Assign Trainer</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dashboardData.users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.username}</td>
-                <td>{user.email}</td>
-                <td>{getRoleDisplay(user.role)}</td>
-                <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                <td>
-                  {user.role === "user" && (
-                    <td>
-                      {user.assigned_trainer ? (
-                        <div className="assigned-trainer">
-                          <span>
-                            Assigned to: {user.assigned_trainer.username}
-                          </span>
-                          <button
-                            className="reassign-btn"
-                            onClick={() => setSelectedTrainer("")}
-                          >
-                            Reassign
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="trainer-assignment">
-                          <select
-                            value={selectedTrainer}
-                            onChange={(e) => setSelectedTrainer(e.target.value)}
-                          >
-                            <option value="">Select Trainer</option>
-                            {trainers.map((trainer) => (
-                              <option key={trainer.id} value={trainer.id}>
-                                {trainer.username}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            className="assign-btn"
-                            onClick={() => handleAssignTrainer(user.id)}
-                            disabled={!selectedTrainer}
-                          >
-                            Assign
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  )}
-                </td>
+        {/*  Trainer Creation Form */}
+        {showTrainerForm && (
+          <div className="trainer-form-container">
+            <h2>Create New Trainer</h2>
+            <form onSubmit={handleCreateTrainer}>
+              <div className="form-group">
+                <label>Username:</label>
+                <input
+                  type="text"
+                  value={trainerData.username}
+                  onChange={(e) =>
+                    setTrainerData({ ...trainerData, username: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Email:</label>
+                <input
+                  type="email"
+                  value={trainerData.email}
+                  onChange={(e) =>
+                    setTrainerData({ ...trainerData, email: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Password:</label>
+                <input
+                  type="password"
+                  value={trainerData.password}
+                  onChange={(e) =>
+                    setTrainerData({ ...trainerData, password: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <button type="submit">Create Trainer</button>
+            </form>
+          </div>
+        )}
+
+        {/* Users Table */}
+        <div className="users-table">
+          <h2>User-Trainer Management</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Type</th>
+                <th>Created At</th>
+                <th>Assign Trainer</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {dashboardData.users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.username}</td>
+                  <td>{user.email}</td>
+                  <td>{getRoleDisplay(user.role)}</td>
+                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                  <td>
+                    {user.role === "user" && (
+                      <td>
+                        {user.assigned_trainer ? (
+                          <div className="assigned-trainer">
+                            <span>
+                              Assigned to: {user.assigned_trainer.username}
+                            </span>
+                            <button
+                              className="reassign-btn"
+                              onClick={() => setSelectedTrainer("")}
+                            >
+                              Reassign
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="trainer-assignment">
+                            <select
+                              value={selectedTrainer}
+                              onChange={(e) => setSelectedTrainer(e.target.value)}
+                            >
+                              <option value="">Select Trainer</option>
+                              {trainers.map((trainer) => (
+                                <option key={trainer.id} value={trainer.id}>
+                                  {trainer.username}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              className="assign-btn"
+                              onClick={() => handleAssignTrainer(user.id)}
+                              disabled={!selectedTrainer}
+                            >
+                              Assign
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 

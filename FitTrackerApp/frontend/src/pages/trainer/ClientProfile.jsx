@@ -1,21 +1,23 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import Navbar from "../../Components/Navbar/Navbar";
+import Footer from "../../Components/Footer/Footer";
 import "./ClientProfile.css";
 
 const ClientProfile = () => {
   // State management for different types of client data
-  const [clientData, setClientData] = useState(null);      // Basic user info
+  const [clientData, setClientData] = useState(null); // Basic user info
   const [workoutHistory, setWorkoutHistory] = useState([]); // Workout records
-  const [error, setError] = useState("");                   // Error handling
-  const [profileData, setProfileData] = useState(null);     // Profile details
-  
+  const [error, setError] = useState(""); // Error handling
+  const [profileData, setProfileData] = useState(null); // Profile details
+
   // Add new state for workout form
   const [workoutForm, setWorkoutForm] = useState({
-    exerciseName: '',
-    description: '',
-    duration: '',
-    calories: ''
+    exerciseName: "",
+    description: "",
+    duration: "",
+    calories: "",
   });
   const [showWorkoutForm, setShowWorkoutForm] = useState(false);
 
@@ -27,9 +29,9 @@ const ClientProfile = () => {
   const fetchClientData = async () => {
     try {
       // Get trainer's credentials from localStorage
-      const trainerId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
-      
+      const trainerId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+
       if (!trainerId || !token) {
         throw new Error("Authentication credentials missing");
       }
@@ -39,8 +41,8 @@ const ClientProfile = () => {
         `http://localhost:8000/api/users/${clientId}/`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -55,15 +57,15 @@ const ClientProfile = () => {
   // Fetch client's workout history (exercises, duration, calories)
   const fetchWorkoutHistory = async () => {
     try {
-      const trainerId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
-      
+      const trainerId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
         `http://localhost:8000/api/users/${clientId}/workout-history/`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -78,9 +80,9 @@ const ClientProfile = () => {
   // Fetch client's profile information (height, weight, age, goals)
   const fetchProfileData = async () => {
     try {
-      const trainerId = localStorage.getItem('userId');
-      const token = localStorage.getItem('token');
-      
+      const trainerId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token");
+
       if (!trainerId || !token) {
         throw new Error("Authentication credentials missing");
       }
@@ -89,17 +91,17 @@ const ClientProfile = () => {
         `http://localhost:8000/api/users/${clientId}/profile/`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch profile data");
       }
-      
+
       const data = await response.json();
       setProfileData(data);
     } catch (err) {
@@ -110,9 +112,9 @@ const ClientProfile = () => {
   // Handle workout form input changes
   const handleWorkoutInputChange = (e) => {
     const { name, value } = e.target;
-    setWorkoutForm(prev => ({
+    setWorkoutForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -120,26 +122,26 @@ const ClientProfile = () => {
   const handleWorkoutSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(
         `http://localhost:8000/api/trainer/assign-workout/${clientId}/`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(workoutForm)
+          body: JSON.stringify(workoutForm),
         }
       );
 
       if (!response.ok) throw new Error("Failed to assign workout");
-      
+
       setWorkoutForm({
-        exerciseName: '',
-        description: '',
-        duration: '',
-        calories: ''
+        exerciseName: "",
+        description: "",
+        duration: "",
+        calories: "",
       });
       setShowWorkoutForm(false);
     } catch (err) {
@@ -147,7 +149,7 @@ const ClientProfile = () => {
     }
   };
 
-  // 
+  //
   const renderWorkoutForm = () => (
     <form onSubmit={handleWorkoutSubmit} className="workout-form">
       <div className="form-group">
@@ -190,9 +192,11 @@ const ClientProfile = () => {
         />
       </div>
       <div className="form-actions">
-        <button type="submit" className="submit-btn">Add Workout</button>
-        <button 
-          type="button" 
+        <button type="submit" className="submit-btn">
+          Add Workout
+        </button>
+        <button
+          type="button"
           className="cancel-btn"
           onClick={() => setShowWorkoutForm(false)}
         >
@@ -202,7 +206,7 @@ const ClientProfile = () => {
     </form>
   );
 
-  // Fetch all client data 
+  // Fetch all client data
   useEffect(() => {
     fetchClientData();
     fetchWorkoutHistory();
@@ -210,80 +214,90 @@ const ClientProfile = () => {
   }, [clientId]);
 
   // Show error message if any fetch operation fails
-  if (error) return <div className="error-message">{error}</div>;
-
+  if (error)
+    return (
+      <>
+        <Navbar />
+        <div className="error-message">{error}</div>
+        <Footer />
+      </>
+    );
 
   // client profile with all fetched data
   return (
-    <div className="client-profile">
-      <h1>Client Profile</h1>
-      
-      {/* Basic Information */}
-      <section className="profile-section">
-        <h2>Basic Information</h2>
-        <div className="info-grid">
-          <div className="info-item">
-            <label>Username:</label>
-            <span>{clientData?.username}</span>
-          </div>
-          <div className="info-item">
-            <label>Height:</label>
-            <span>
-              {profileData?.height_feet}'{profileData?.height_inches}"
-            </span>
-          </div>
-          <div className="info-item">
-            <label>Weight:</label>
-            <span>{profileData?.weight} lbs</span>
-          </div>
-          <div className="info-item">
-            <label>Age:</label>
-            <span>{profileData?.age}</span>
-          </div>
-        </div>
-      </section>
+    <>
+      <Navbar />
+      <div className="client-profile">
+        <h1>Client Profile</h1>
 
-      {/* Fitness Goals */}
-      <section className="profile-section">
-        <h2>Fitness Goals</h2>
-        <p>{profileData?.fitness_goals}</p>
-      </section>
-
-      {/* Add Workout Section */}
-      <section className="profile-section">
-        <h2>Add Workout</h2>
-        {showWorkoutForm ? (
-          renderWorkoutForm()
-        ) : (
-          <button 
-            className="add-workout-btn"
-            onClick={() => setShowWorkoutForm(true)}
-          >
-            Add New Workout
-          </button>
-        )}
-      </section>
-
-      {/* Recent Workouts */}
-      <section className="profile-section">
-        <h2>Recent Workouts</h2>
-        <div className="workout-list">
-          {workoutHistory.map((workout) => (
-            <div key={workout.id} className="workout-entry">
-              <div className="workout-header">
-                <span className="date">
-                  {new Date(workout.workout_date).toLocaleDateString()}
-                </span>
-                <span className="duration">{workout.duration} minutes</span>
-              </div>
-              <div className="workout-details">
-                <span className="calories">{workout.calories} calories</span>
-              </div>
+        {/* Basic Information */}
+        <section className="profile-section">
+          <h2>Basic Information</h2>
+          <div className="info-grid">
+            <div className="info-item">
+              <label>Username:</label>
+              <span>{clientData?.username}</span>
             </div>
-          ))}
-        </div>
-      </section>
-    </div>
+            <div className="info-item">
+              <label>Height:</label>
+              <span>
+                {profileData?.height_feet}'{profileData?.height_inches}"
+              </span>
+            </div>
+            <div className="info-item">
+              <label>Weight:</label>
+              <span>{profileData?.weight} lbs</span>
+            </div>
+            <div className="info-item">
+              <label>Age:</label>
+              <span>{profileData?.age}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Fitness Goals */}
+        <section className="profile-section">
+          <h2>Fitness Goals</h2>
+          <p>{profileData?.fitness_goals}</p>
+        </section>
+
+        {/* Add Workout Section */}
+        <section className="profile-section">
+          <h2>Add Workout</h2>
+          {showWorkoutForm ? (
+            renderWorkoutForm()
+          ) : (
+            <button
+              className="add-workout-btn"
+              onClick={() => setShowWorkoutForm(true)}
+            >
+              Add New Workout
+            </button>
+          )}
+        </section>
+
+        {/* Recent Workouts */}
+        <section className="profile-section">
+          <h2>Recent Workouts</h2>
+          <div className="workout-list">
+            {workoutHistory.map((workout) => (
+              <div key={workout.id} className="workout-entry">
+                <div className="workout-header">
+                  <span className="date">
+                    {new Date(workout.workout_date).toLocaleDateString()}
+                  </span>
+                  <span className="duration">{workout.duration} minutes</span>
+                </div>
+                <div className="workout-details">
+                  <span className="calories">{workout.calories} calories</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+      <Footer />
+    </>
   );
 };
 

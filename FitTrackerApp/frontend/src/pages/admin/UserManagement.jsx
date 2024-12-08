@@ -57,7 +57,21 @@ const UserManagement = () => {
   };
 
   // Show error message if something went wrong
-  if (error) return <p>Error: {error}</p>;
+  if (error) return (
+    <>
+      <Navbar />
+      <div className="error-message">Error: {error}</div>
+      <Footer />
+    </>
+  );
+
+  if (isLoading) return (
+    <>
+      <Navbar />
+      <div>Loading users...</div>
+      <Footer />
+    </>
+  );
 
   // Main render of the user management interface
   return (
@@ -77,39 +91,37 @@ const UserManagement = () => {
           />
         </div>
         
-        {isLoading && <div>Loading users...</div>}
-        {error && <div className="error-message">{error}</div>}
-        
-        {!isLoading && !error && (
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Created At</th>
-                <th>Actions</th>
+        {/* Users Table */}
+        <table className="user-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user.id}>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                <td>
+                  <button onClick={() => handleViewUser(user.id)}>View</button>
+                  <button onClick={() => handleEditUser(user.id)}>Edit</button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>{user.role}</td>
-                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <button onClick={() => handleViewUser(user.id)}>View</button>
-                    <button onClick={() => handleEditUser(user.id)}>Edit</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
         
-        {!isLoading && !error && filteredUsers.length === 0 && (
-          <div className="no-results">No users found matching "{searchUser}"</div>
+        {filteredUsers.length === 0 && (
+          <div className="no-results">
+            No users found matching "{searchUser}"
+          </div>
         )}
       </div>
       <Footer />

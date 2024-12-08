@@ -10,26 +10,40 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
+  // Check authentication status on mount and when localStorage changes
   useEffect(() => {
-    const userRole = localStorage.getItem("userRole");
-    setIsAuthenticated(!!userRole);
-    setUserRole(userRole);
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("userRole");
+
+    if (token && role) {
+      setIsAuthenticated(true);
+      setUserRole(role);
+    } else {
+      setIsAuthenticated(false);
+      setUserRole(null);
+    }
   }, []);
 
   const login = (role) => {
-    setUserRole(role);
     setIsAuthenticated(true);
-    localStorage.setItem("userRole", role || "user");
+    setUserRole(role);
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userId");
+    setUserRole(null);
+    localStorage.clear();
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, userRole }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        userRole,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
