@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../Components/Navbar/Navbar";
 import Footer from "../Components/Footer/Footer";
@@ -14,6 +14,40 @@ const ProfileInfo = () => {
     fitness_goals: "",
   });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+          `http://localhost:8000/api/users/${userId}/profile/`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setFormData({
+            height_feet: data.height_feet || "",
+            height_inches: data.height_inches || "",
+            weight: data.weight || "",
+            age: data.age || "",
+            fitness_goals: data.fitness_goals || "",
+          });
+        }
+      } catch (err) {
+        setError("Failed to load profile data");
+      }
+    };
+
+    fetchProfileData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

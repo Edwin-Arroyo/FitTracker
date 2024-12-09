@@ -1,0 +1,61 @@
+Test Plan
+User Story: As an unregistered user, I want to create an account, so that I can track my health goals
+    Acceptance Criteria:
+        System must allow users to register via entering email, username, and password for their account
+        The system must validate that the email is unique and valid
+        After creation the user must be redirected to the home page
+User Story: As a registered user, I want to log in to the app, so that I can track my progress
+    Acceptance Criteria:
+        System must allow registered users to log in via the credentials they set when they registered
+        Upon successful login, user must be directed to their profile page
+        If credentials provided are incorrect, system must provide a message indicating that the credentials are incorrect
+User Story: As a registered user, I want to input basic information like height, age weight..etc., so that my trainer knows my basic information and goals
+    Acceptance Criteria:
+        System must allow users to input their age, weight, height, and goals
+        System must display this information to trainers
+        This basic information should be displayed on an information card, on the user’s profile
+        User should be able to update this information at any time
+User Story: As a registered user, I want to log my workouts, so that I can see progress over time
+    Acceptance Criteria:
+        System must allow user to log workouts
+        System must keep a log of a users workout history
+        The workout logs should have dates associated with them
+        Calories burned from workout(daily) should be displayed on screen
+User Story: As a registered user, I want to see workouts assigned by my trainer, so that I can complete the assigned workout
+    Acceptance Criteria:
+        Workouts assigned by trainers must be viewable on a user's profile page
+        Workout description must be included
+        Time when workout was assigned must be displayed
+User Story: As a registered user, I want to mark assigned workouts as complete, so that I can track my progress
+    Acceptance Criteria:	
+        User must be able to mark a trainer assigned workout as complete 
+        The trainer assigned workout assigned as complete must time stamped
+        The workout marked as complete must go to the workout logs
+User Story: As a registered user, I want to input macronutrient I have consumed, so that I can track my nutrition
+    Acceptance Criteria:
+        Users must be able to input carbs, proteins, and fats they have consumed
+        System must calculate total calories bases on the users input 
+        Total calories should be displayed(daily) on their screen
+User Story: As a trainer, I want to view a client’s basic information, so that I can assess their goal and current progress
+    Acceptance Criteria:
+        System must display a client’s basic information to their assigned trainer
+        System must not allow trainer to alter any of this information
+User Story: As a trainer, I want to give my clients a workout plan, So that I can assist them in reaching their goals
+    Acceptance Criteria:
+        System must allow trainers to give their clients a workout plan
+        The workout plan must appear on the clients profile page and indicate that it is a trainer assigned workout
+User Story: As a trainer, I want to view my client’s workout history, so that I can see if they are making progress
+    Acceptance Criteria:
+        System must allow trainers to view their clients workout history
+        System must display the date of the workout(just like it does for a basic user)
+User Story: As an admin, I want to log in with my credentials, so that I can perform admin only tasks
+    Acceptance Criteria:
+        System must verify the credentials of the individual trying to sign in as admin 
+        Admin must be redirected to the admin dashboard
+User Story: As an admin, I want to track how many user and trainer accounts there are, so that I can analyze platform usage
+    Acceptance Criteria:
+        System must display a count of both registered users and trainers that have an account
+User Story: As an admin, I want to create trainer accounts, so that I can ensure security on the platform
+    Acceptance Criteria: 
+        System must only allow the admin to create a trainer account
+        System must offer this functionality on the admin dashboard

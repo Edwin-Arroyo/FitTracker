@@ -40,7 +40,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch dashboard data on component mount
+  // Fetch dashboard data
   useEffect(() => {
     fetchDashboardData();
   }, []);

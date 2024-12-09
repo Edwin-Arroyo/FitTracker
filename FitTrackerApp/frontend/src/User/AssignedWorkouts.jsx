@@ -42,6 +42,11 @@ const AssignedWorkouts = () => {
 
         const data = await response.json();
         setAssignedWorkouts(data);
+        
+        // Calculate initial remaining workouts
+        const remainingCount = data.filter(workout => !workout.completed).length;
+        setRemainingWorkouts(remainingCount);
+        
       } catch (err) {
         setError(err.message);
       } finally {
@@ -56,8 +61,14 @@ const AssignedWorkouts = () => {
   const handleMarkComplete = async (workoutId) => {
     try {
       const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      
+      if (!token || !userId) {
+        throw new Error('Authentication required');
+      }
+
       const response = await fetch(
-        `http://localhost:8000/api/assigned-workouts/${workoutId}/complete/`,
+        `http://localhost:8000/api/users/${userId}/assigned-workouts/${workoutId}/complete/`,
         {
           method: 'POST',
           headers: {
@@ -68,23 +79,69 @@ const AssignedWorkouts = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to mark workout as complete');
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || errorData.detail || 'Failed to mark workout as complete');
+        } catch (e) {
+          throw new Error('Failed to mark workout as complete');
+        }
       }
 
-     
-      setAssignedWorkouts(prevWorkouts =>
-        prevWorkouts.map(workout =>
-          workout.id === workoutId
-            ? { ...workout, completed: true, completed_date: new Date().toISOString() }
-            : workout
-        )
+      const completedWorkout = await response.json();
+      console.log('Completed workout:', completedWorkout);
+
+      // Create workout log entry
+      const workoutLogEntry = {
+        exerciseName: completedWorkout.exercise_name,
+        description: completedWorkout.description,
+        duration: completedWorkout.duration,
+        calories: completedWorkout.calories,
+        date: completedWorkout.completed_date,
+        isAssigned: true,
+        assignedBy: completedWorkout.trainer_name,
+        workoutId: completedWorkout.id,
+        workoutHistoryId: completedWorkout.workout_history_id,
+        completed: true
+      };
+
+      // Get existing logs and add new entry
+      const existingLogs = JSON.parse(localStorage.getItem('workoutLogs') || '[]');
+      const workoutExists = existingLogs.some(log => 
+        log.workoutId === workoutId || 
+        log.workoutHistoryId === completedWorkout.workout_history_id
       );
+      
+      if (!workoutExists) {
+        existingLogs.push(workoutLogEntry);
+        localStorage.setItem('workoutLogs', JSON.stringify(existingLogs));
+        console.log('Added to workout logs:', workoutLogEntry);
+      }
+
+      // Update assigned workouts state
+      setAssignedWorkouts(prevWorkouts => {
+        const updatedWorkouts = prevWorkouts.map(workout =>
+          workout.id === workoutId
+            ? { ...workout, completed: true, completed_date: completedWorkout.completed_date }
+            : workout
+        );
+        
+        const remainingCount = updatedWorkouts.filter(w => !w.completed).length;
+        setRemainingWorkouts(remainingCount);
+        
+        return updatedWorkouts;
+      });
+
     } catch (err) {
+      console.error('Error completing workout:', err);
       setError(err.message);
     }
   };
 
- 
+  // Add state for remaining workouts
+  const [remainingWorkouts, setRemainingWorkouts] = useState(0);
 
   // error message if fetch failed
   if (error) return <div className="error">{error}</div>;
@@ -95,6 +152,11 @@ const AssignedWorkouts = () => {
       <Navbar />
       <div className="assigned-workouts-container">
         <h1>Assigned Workouts</h1>
+        
+        {/* Display remaining workouts count */}
+        <div className="workouts-summary">
+          <h2>Remaining Workouts: {remainingWorkouts}</h2>
+        </div>
         
         {/* if no workouts are assigned */}
         {assignedWorkouts.length === 0 ? (

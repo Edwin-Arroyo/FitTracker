@@ -56,7 +56,9 @@ urlpatterns = [
         path('users/<int:user_id>/profile/', user_profile, name='user_profile'),
         path('trainer/assign-workout/<int:client_id>/', assign_workout, name='assign_workout'),
         path('users/<int:user_id>/assigned-workouts/', get_assigned_workouts, name='get_assigned_workouts'),
-        path('assigned-workouts/<int:workout_id>/complete/', complete_workout, name='complete_workout'),
+        path('users/<int:user_id>/assigned-workouts/<int:workout_id>/complete/', 
+             complete_workout, 
+             name='complete_workout'),
     ])),
 ]
 

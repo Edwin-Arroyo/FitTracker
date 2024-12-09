@@ -27,35 +27,35 @@ const Profile = () => {
     height_inches: 0,
     weight: 0,
     age: 0,
-    fitness_goals: ''
+    fitness_goals: "",
   });
- 
+
   const [assignedWorkouts, setAssignedWorkouts] = useState([]);
 
-  // fetch user data 
+  // fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
-        
+
         if (!userId || !token) {
-            throw new Error("No user ID or token found");
+          throw new Error("No user ID or token found");
         }
 
         const response = await fetch(
-            `http://localhost:8000/api/users/${userId}/`,
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-            }
+          `http://localhost:8000/api/users/${userId}/`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Failed to fetch user data");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch user data");
         }
 
         const data = await response.json();
@@ -103,12 +103,12 @@ const Profile = () => {
       try {
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
-        
+
         const response = await fetch(
           `http://localhost:8000/api/users/${userId}/assigned-workouts/`,
           {
             headers: {
-              "Authorization": `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           }
@@ -130,7 +130,7 @@ const Profile = () => {
     try {
       const userId = localStorage.getItem("userId");
       const token = localStorage.getItem("token");
-      
+
       if (!userId || !token) {
         throw new Error("No user ID or token found");
       }
@@ -140,14 +140,20 @@ const Profile = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
       if (response.ok) {
         const data = await response.json();
-        setProfileData(data);
+        setProfileData({
+          height_feet: data.height_feet || 0,
+          height_inches: data.height_inches || 0,
+          weight: data.weight || 0,
+          age: data.age || 0,
+          fitness_goals: data.fitness_goals || "",
+        });
       }
     } catch (err) {
       console.error("Error fetching profile data:", err);
@@ -164,7 +170,7 @@ const Profile = () => {
     try {
       const userId = localStorage.getItem("userId");
       const token = localStorage.getItem("token");
-      
+
       if (!userId || !token) {
         throw new Error("No user ID or token found");
       }
@@ -172,12 +178,12 @@ const Profile = () => {
       const response = await fetch(
         `http://localhost:8000/api/users/${userId}/profile/`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(profileData)
+          body: JSON.stringify(profileData),
         }
       );
 
@@ -194,7 +200,6 @@ const Profile = () => {
     }
   };
 
- 
   if (error) return <div>Error: {error}</div>;
   if (!userData) return <div>No user data found</div>;
 
@@ -229,7 +234,9 @@ const Profile = () => {
               </div>
               <div className="detail-item">
                 <span className="detail-label">Fitness Goals:</span>
-                <p className="detail-value goals">{profileData.fitness_goals}</p>
+                <p className="detail-value goals">
+                  {profileData.fitness_goals}
+                </p>
               </div>
             </div>
             <button

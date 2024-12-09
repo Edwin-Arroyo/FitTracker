@@ -1,6 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from .models import FitTrackerUser, TrainerClient, WorkoutHistory, Nutrition, Progress, UserProfile, AssignedWorkout
 from .serializers import (
     UserSerializer, 
@@ -8,6 +8,7 @@ from .serializers import (
     ExerciseSerializer,
     WorkoutHistorySerializer,
     AssignedWorkoutSerializer,
+
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,6 +16,7 @@ from django.db import models
 from django.utils import timezone
 from django.db.models import Sum
 from datetime import datetime
+from rest_framework.permissions import IsAuthenticated
 
 
 # user_list - get all users, create a new user
@@ -485,6 +487,27 @@ def user_profile(request, user_id):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        if request.method == 'POST':
+            # Get or create the profile
+            profile, created = UserProfile.objects.get_or_create(user_id=user_id)
+            
+            # Update the profile with the new data
+            profile.height_feet = request.data.get('height_feet', profile.height_feet)
+            profile.height_inches = request.data.get('height_inches', profile.height_inches)
+            profile.weight = request.data.get('weight', profile.weight)
+            profile.age = request.data.get('age', profile.age)
+            profile.fitness_goals = request.data.get('fitness_goals', profile.fitness_goals)
+            profile.save()
+            
+            return Response({
+                'height_feet': profile.height_feet,
+                'height_inches': profile.height_inches,
+                'weight': profile.weight,
+                'age': profile.age,
+                'fitness_goals': profile.fitness_goals
+            }, status=status.HTTP_200_OK)
+            
+        # GET request handling...
         try:
             profile = UserProfile.objects.get(user_id=user_id)
             return Response({
@@ -545,31 +568,66 @@ def get_assigned_workouts(request, user_id):
 # Client can mark a trainer assigned workout as complete
 @csrf_exempt
 @api_view(['POST'])
-def complete_workout(request, workout_id):
+def complete_workout(request, user_id, workout_id):
     try:
-        # Get the workout
-        workout = AssignedWorkout.objects.get(pk=workout_id)
-        
-        # Verify the client is the one completing the workout
-        auth_token = request.headers.get('Authorization').split(' ')[1]
-        client_id = int(auth_token)
-        
-        if workout.client.id != client_id:
+        # Get the token from the request
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
             return Response(
-                {'error': 'Not authorized to complete this workout'}, 
-                status=status.HTTP_403_FORBIDDEN
+                {'error': 'Authorization header missing or invalid'}, 
+                status=status.HTTP_401_UNAUTHORIZED
             )
         
+        token = auth_header.split(' ')[1]
+        requesting_user_id = int(token)
+        
+        # Verify the requesting user is the same as the user_id in the URL
+        if requesting_user_id != int(user_id):
+            return Response(
+                {'error': 'Unauthorized to complete this workout'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get the workout and verify it exists
+        workout = AssignedWorkout.objects.get(
+            id=workout_id,
+            client_id=user_id
+        )
+        
+        # Check if already completed
+        if workout.completed:
+            return Response(
+                {'error': 'Workout already completed'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         # Mark as complete
         workout.completed = True
         workout.completed_date = timezone.now()
         workout.save()
         
-        return Response({
+        # Create WorkoutHistory entry
+        workout_history = WorkoutHistory.objects.create(
+            user_id=user_id,
+            workout_date=workout.completed_date,
+            calories=workout.calories,
+            duration=workout.duration
+        )
+        
+        # Prepare response data
+        response_data = {
             'id': workout.id,
+            'exercise_name': workout.exercise_name,
+            'description': workout.description,
+            'duration': workout.duration,
+            'calories': workout.calories,
             'completed': workout.completed,
-            'completed_date': workout.completed_date
-        }, status=status.HTTP_200_OK)
+            'completed_date': workout.completed_date,
+            'trainer_name': workout.trainer.username if workout.trainer else "Unknown Trainer",
+            'workout_history_id': workout_history.id
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
         
     except AssignedWorkout.DoesNotExist:
         return Response(
@@ -577,7 +635,8 @@ def complete_workout(request, workout_id):
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
+        print(f"Error completing workout: {str(e)}")
         return Response(
             {'error': str(e)}, 
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
