@@ -69,10 +69,17 @@ const ClientProfile = () => {
           },
         }
       );
-      if (!response.ok) throw new Error("Failed to fetch workout history");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch workout history");
+      }
+
       const data = await response.json();
+      console.log("Workout history data:", data); // Debug log
       setWorkoutHistory(data);
     } catch (err) {
+      console.error("Error fetching workout history:", err); // Debug log
       setError(err.message);
     }
   };
@@ -280,19 +287,29 @@ const ClientProfile = () => {
         <section className="profile-section">
           <h2>Recent Workouts</h2>
           <div className="workout-list">
-            {workoutHistory.map((workout) => (
-              <div key={workout.id} className="workout-entry">
-                <div className="workout-header">
-                  <span className="date">
-                    {new Date(workout.workout_date).toLocaleDateString()}
-                  </span>
-                  <span className="duration">{workout.duration} minutes</span>
+            {workoutHistory.length > 0 ? (
+              workoutHistory.map((workout) => (
+                <div key={workout.id} className="workout-entry">
+                  <div className="workout-header">
+                    <h4>{workout.exercise_name || "Unnamed Exercise"}</h4>
+                    <span className="date">
+                      {new Date(workout.workout_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="workout-details">
+                    <p><strong>Duration:</strong> {workout.duration} minutes</p>
+                    <p><strong>Calories:</strong> {workout.calories} calories</p>
+                    {workout.description && (
+                      <p className="workout-description">
+                        <strong>Description:</strong> {workout.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="workout-details">
-                  <span className="calories">{workout.calories} calories</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="no-workouts">No workout history available</p>
+            )}
           </div>
         </section>
       </div>

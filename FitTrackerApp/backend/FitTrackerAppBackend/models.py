@@ -18,13 +18,22 @@ class FitTrackerUser(models.Model):
 
 # Exercise information inputted by the user
 class Exercise(models.Model):
+    user = models.ForeignKey(
+        FitTrackerUser, 
+        on_delete=models.CASCADE, 
+        related_name='exercises',
+        null=True,  # Allow null for existing records
+        blank=True  # Allow blank in forms
+    )
     name = models.CharField(max_length=100)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    duration = models.IntegerField(default=0)  # Duration in minutes
+    calories = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name
+        return f"{self.user.username if self.user else 'Unknown'} - {self.name}"
 
 # Workout information inputted by the user
 class Workout(models.Model):
@@ -39,6 +48,7 @@ class Workout(models.Model):
 # User's workout history
 class WorkoutHistory(models.Model):
     user = models.ForeignKey(FitTrackerUser, on_delete=models.CASCADE)
+    exercise = models.ForeignKey(Exercise, on_delete=models.SET_NULL, null=True, related_name='workout_history')
     workout_date = models.DateTimeField(default=timezone.now)
     calories = models.IntegerField(default=0)
     duration = models.IntegerField(default=0)

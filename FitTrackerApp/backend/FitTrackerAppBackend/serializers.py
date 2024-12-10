@@ -4,7 +4,7 @@ from .models import Exercise, WorkoutHistory, Nutrition, FitTrackerUser, Assigne
 class ExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
-        fields = ['id', 'name', 'description', 'created_at']
+        fields = ['id', 'user', 'name', 'description', 'duration', 'calories', 'created_at']
 
 class WorkoutHistorySerializer(serializers.ModelSerializer):
     class Meta:

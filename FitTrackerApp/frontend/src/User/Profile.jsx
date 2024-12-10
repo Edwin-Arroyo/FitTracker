@@ -123,7 +123,26 @@ const Profile = () => {
       }
     };
 
+    // Fetch initial data
     fetchAssignedWorkouts();
+
+    // Listen for workout completion events
+    const handleWorkoutCompleted = (event) => {
+      const completedWorkoutId = event.detail.workoutId;
+      setAssignedWorkouts(prevWorkouts => 
+        prevWorkouts.map(workout => 
+          workout.id === completedWorkoutId 
+            ? { ...workout, completed: true }
+            : workout
+        )
+      );
+    };
+
+    window.addEventListener('workoutCompleted', handleWorkoutCompleted);
+    
+    return () => {
+      window.removeEventListener('workoutCompleted', handleWorkoutCompleted);
+    };
   }, []);
 
   const fetchProfileData = async () => {
@@ -160,7 +179,7 @@ const Profile = () => {
     }
   };
 
-  // Handler for logout button
+  // logout button
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -295,8 +314,10 @@ const Profile = () => {
             </div>
             <div className="stat-card">
               <h3>Trainer Workouts</h3>
-              <p className="stat-number">{assignedWorkouts.length}</p>
-              <p className="stat-label">Assigned</p>
+              <p className="stat-number">
+                {assignedWorkouts.filter(workout => !workout.completed).length}
+              </p>
+              <p className="stat-label">Remaining</p>
               <button
                 onClick={() => navigate("/user/assigned-workouts")}
                 className="action-button"

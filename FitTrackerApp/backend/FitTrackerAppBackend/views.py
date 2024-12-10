@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
-from .models import FitTrackerUser, TrainerClient, WorkoutHistory, Nutrition, Progress, UserProfile, AssignedWorkout
+from .models import FitTrackerUser, TrainerClient, WorkoutHistory, Nutrition, Progress, UserProfile, AssignedWorkout, Exercise
 from .serializers import (
     UserSerializer, 
     NutritionSerializer,
@@ -188,35 +188,77 @@ def log_exercise(request):
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def log_workout(request, user_id):
-    try:
-        # First create the exercise
-        exercise_data = {
-            'name': request.data.get('exerciseName'),
-            'description': request.data.get('description')
-        }
-        exercise_serializer = ExerciseSerializer(data=exercise_data)
-        if exercise_serializer.is_valid():
-            exercise = exercise_serializer.save()
+    if request.method == 'GET':
+        try:
+            # Get both Exercise and WorkoutHistory records for the user
+            exercises = Exercise.objects.filter(user_id=user_id).order_by('-created_at')
+            workout_history = WorkoutHistory.objects.filter(user_id=user_id).order_by('-workout_date')
             
-            # Then create the workout history
-            workout_data = {
+            # Combine the data
+            workout_logs = []
+            for exercise in exercises:
+                workout_logs.append({
+                    'id': exercise.id,
+                    'exerciseName': exercise.name,
+                    'description': exercise.description,
+                    'duration': exercise.duration,
+                    'calories': exercise.calories,
+                    'date': exercise.created_at,
+                })
+            
+            return Response(workout_logs, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print(f"Error fetching workouts: {str(e)}")
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    elif request.method == 'POST':
+        try:
+            current_time = timezone.now()
+            
+            # Create the exercise record first
+            exercise_data = {
                 'user': user_id,
+                'name': request.data.get('exerciseName'),
+                'description': request.data.get('description'),
                 'duration': request.data.get('duration'),
-                'calories': request.data.get('calories')
+                'calories': request.data.get('calories'),
+                'created_at': current_time
             }
-            workout_serializer = WorkoutHistorySerializer(data=workout_data)
-            if workout_serializer.is_valid():
-                workout = workout_serializer.save()
-                return Response({
-                    'exercise': exercise_serializer.data,
-                    'workout': workout_serializer.data
-                }, status=status.HTTP_201_CREATED)
-            return Response(workout_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(exercise_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            exercise_serializer = ExerciseSerializer(data=exercise_data)
+            if exercise_serializer.is_valid():
+                exercise = exercise_serializer.save()
+                
+                # Create the workout history record with the same timestamp
+                workout_data = {
+                    'user': user_id,
+                    'workout_date': current_time,
+                    'duration': request.data.get('duration'),
+                    'calories': request.data.get('calories'),
+                    'exercise': exercise.id  # Link to the exercise
+                }
+                workout_serializer = WorkoutHistorySerializer(data=workout_data)
+                if workout_serializer.is_valid():
+                    workout = workout_serializer.save()
+                    
+                    return Response({
+                        'id': exercise.id,
+                        'exerciseName': exercise.name,
+                        'description': exercise.description,
+                        'duration': exercise.duration,
+                        'calories': exercise.calories,
+                        'date': exercise.created_at
+                    }, status=status.HTTP_201_CREATED)
+                return Response(workout_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(exercise_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Error in log_workout: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -436,11 +478,60 @@ def assign_trainer(request):
 @api_view(['GET'])
 def client_workout_history(request, client_id):
     try:
-        workouts = WorkoutHistory.objects.filter(user_id=client_id)
-        serializer = WorkoutHistorySerializer(workouts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Verify token and get requesting user (trainer)
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response(
+                {'error': 'Authorization header missing or invalid'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        token = auth_header.split(' ')[1]
+        trainer_id = int(token)
+        
+        # Verify trainer has access to this client
+        trainer_client_exists = TrainerClient.objects.filter(
+            trainer_id=trainer_id,
+            client_id=client_id
+        ).exists()
+        
+        if not trainer_client_exists:
+            return Response(
+                {'error': 'You do not have permission to view this client\'s workouts'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get both Exercise and WorkoutHistory records
+        workouts = WorkoutHistory.objects.filter(user_id=client_id).order_by('-workout_date')
+        exercises = Exercise.objects.filter(user_id=client_id)
+        
+        workout_data = []
+        for workout in workouts:
+            # Find matching exercise
+            matching_exercise = next(
+                (e for e in exercises if 
+                 e.created_at.date() == workout.workout_date.date() and
+                 e.duration == workout.duration and
+                 e.calories == workout.calories),
+                None
+            )
+            
+            workout_data.append({
+                'id': workout.id,
+                'workout_date': workout.workout_date,
+                'exercise_name': matching_exercise.name if matching_exercise else "Unknown Exercise",
+                'description': matching_exercise.description if matching_exercise else "",
+                'duration': workout.duration,
+                'calories': workout.calories
+            })
+            
+        return Response(workout_data, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(f"Error in client_workout_history: {str(e)}")
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 
@@ -594,7 +685,6 @@ def complete_workout(request, user_id, workout_id):
             client_id=user_id
         )
         
-        # Check if already completed
         if workout.completed:
             return Response(
                 {'error': 'Workout already completed'}, 
@@ -606,15 +696,25 @@ def complete_workout(request, user_id, workout_id):
         workout.completed_date = timezone.now()
         workout.save()
         
-        # Create WorkoutHistory entry
+        # Create Exercise record
+        exercise = Exercise.objects.create(
+            user_id=user_id,
+            name=workout.exercise_name,
+            description=workout.description,
+            duration=workout.duration,
+            calories=workout.calories,
+            created_at=workout.completed_date
+        )
+        
+        # Create WorkoutHistory entry linked to the exercise
         workout_history = WorkoutHistory.objects.create(
             user_id=user_id,
+            exercise=exercise,  # Link to the exercise
             workout_date=workout.completed_date,
             calories=workout.calories,
             duration=workout.duration
         )
         
-        # Prepare response data
         response_data = {
             'id': workout.id,
             'exercise_name': workout.exercise_name,
@@ -624,19 +724,23 @@ def complete_workout(request, user_id, workout_id):
             'completed': workout.completed,
             'completed_date': workout.completed_date,
             'trainer_name': workout.trainer.username if workout.trainer else "Unknown Trainer",
-            'workout_history_id': workout_history.id
+            'workout_history_id': workout_history.id,
+            'exercise_id': exercise.id
         }
         
         return Response(response_data, status=status.HTTP_200_OK)
         
-    except AssignedWorkout.DoesNotExist:
-        return Response(
-            {'error': 'Workout not found'}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
     except Exception as e:
         print(f"Error completing workout: {str(e)}")
-        return Response(
-            {'error': str(e)}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# Add a new endpoint to get user's exercises
+@csrf_exempt
+@api_view(['GET'])
+def get_user_exercises(request, user_id):
+    try:
+        exercises = Exercise.objects.filter(user_id=user_id)
+        serializer = ExerciseSerializer(exercises, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

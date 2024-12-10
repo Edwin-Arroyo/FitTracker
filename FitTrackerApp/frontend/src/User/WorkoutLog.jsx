@@ -38,21 +38,24 @@ const WorkoutLog = () => {
             exerciseName: workoutData.exerciseName,
             description: workoutData.description,
             duration: parseInt(workoutData.duration),
-            calories: parseInt(workoutData.calories),
+            calories: parseInt(workoutData.calories)
           }),
         }
       );
 
       if (!workoutResponse.ok) {
-        throw new Error("Failed to log workout");
+        const errorData = await workoutResponse.json();
+        throw new Error(errorData.error || "Failed to log workout");
       }
 
-      // Store workout in localStorage
+      const responseData = await workoutResponse.json();
+
+      // Store workout in localStorage with the date from the server
       const newWorkout = {
         ...workoutData,
         duration: parseInt(workoutData.duration),
         calories: parseInt(workoutData.calories),
-        date: new Date().toISOString()
+        date: responseData.date
       };
 
       const existingWorkouts = JSON.parse(localStorage.getItem('workoutLogs') || '[]');
@@ -70,6 +73,7 @@ const WorkoutLog = () => {
 
       navigate("/workout-logs");
     } catch (err) {
+      console.error("Error logging workout:", err);
       setError(err.message);
     }
   };

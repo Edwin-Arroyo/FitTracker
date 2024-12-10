@@ -56,19 +56,35 @@
   }
   
   .workout-entry {
-    background: #f5f5f5;
+    background: white;
+    border-radius: 8px;
     padding: 1rem;
-    border-radius: 4px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .workout-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.5rem;
   }
   
-  .workout-details {
+  .workout-header h4 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .workout-details p {
+    margin: 0.5rem 0;
     color: #666;
+  }
+  
+  .workout-description {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eee;
+    font-style: italic;
   }
   
   

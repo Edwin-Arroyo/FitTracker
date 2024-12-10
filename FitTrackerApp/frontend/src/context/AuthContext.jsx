@@ -5,23 +5,34 @@ import { createContext, useContext, useState, useEffect } from "react";
 // Initialize with null as default value
 const AuthContext = createContext(null);
 
-// AuthProvider component that wraps the app and provides authentication state
+// Helper function to check authentication status
+const checkAuthStatus = () => {
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('userRole');
+  
+  if (!token || !userRole) {
+    return {
+      isAuthenticated: false,
+      userRole: null
+    };
+  }
+  
+  return {
+    isAuthenticated: true,
+    userRole: userRole
+  };
+};
+
+// authentication state 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
-  // Check authentication status on mount and when localStorage changes
+  // Check authentication status when the app loads
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("userRole");
-
-    if (token && role) {
-      setIsAuthenticated(true);
-      setUserRole(role);
-    } else {
-      setIsAuthenticated(false);
-      setUserRole(null);
-    }
+    const { isAuthenticated: authStatus, userRole: role } = checkAuthStatus();
+    setIsAuthenticated(authStatus);
+    setUserRole(role);
   }, []);
 
   const login = (role) => {
@@ -30,9 +41,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    localStorage.clear();
     setIsAuthenticated(false);
     setUserRole(null);
-    localStorage.clear();
   };
 
   return (
@@ -49,8 +60,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the auth context
-// Components can import this to access auth state and functions
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

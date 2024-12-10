@@ -1,5 +1,5 @@
 import { Navigate, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 // ProtectedRoute component that wraps protected pages/routes
@@ -9,16 +9,37 @@ import { useAuth } from "../context/AuthContext";
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, userRole } = useAuth();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    } else if (!allowedRoles.includes(userRole)) {
-      navigate("/"); // or wherever you want to redirect unauthorized users
-    }
-  }, [isAuthenticated, userRole, allowedRoles, navigate]);
+    const token = localStorage.getItem("token");
+    const storedUserRole = localStorage.getItem("userRole");
 
-  return isAuthenticated && allowedRoles.includes(userRole) ? children : null;
+    if (!token || !storedUserRole) {
+      navigate("/login");
+    } else if (!allowedRoles.includes(storedUserRole)) {
+      navigate("/");
+    }
+    setIsLoading(false);
+  }, [allowedRoles, navigate]);
+
+  if (isLoading) {
+    return <div>Loading...</div>; 
+  }
+
+  // Check if user has required role
+  const token = localStorage.getItem("token");
+  const storedUserRole = localStorage.getItem("userRole");
+
+  if (!token || !storedUserRole) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!allowedRoles.includes(storedUserRole)) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;

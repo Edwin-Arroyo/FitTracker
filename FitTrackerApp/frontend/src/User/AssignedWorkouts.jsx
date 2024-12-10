@@ -1,52 +1,50 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../Components/Navbar/Navbar';
-import Footer from '../Components/Footer/Footer';
-import './AssignedWorkouts.css';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../Components/Navbar/Navbar";
+import Footer from "../Components/Footer/Footer";
+import "./AssignedWorkouts.css";
 
 // Component to display workouts assigned by trainers to clients
 const AssignedWorkouts = () => {
-  
   const [assignedWorkouts, setAssignedWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [remainingWorkouts, setRemainingWorkouts] = useState(0);
   const navigate = useNavigate();
 
-  // Fetch assigned workouts 
+  // Fetch assigned workouts
   useEffect(() => {
     const fetchAssignedWorkouts = async () => {
       try {
-      
-        const userId = localStorage.getItem('userId');
-        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
 
-       
         if (!userId || !token) {
-          throw new Error('Authentication required');
+          throw new Error("Authentication required");
         }
 
-       
         const response = await fetch(
           `http://localhost:8000/api/users/${userId}/assigned-workouts/`,
           {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch assigned workouts');
+          throw new Error("Failed to fetch assigned workouts");
         }
 
         const data = await response.json();
         setAssignedWorkouts(data);
-        
+
         // Calculate initial remaining workouts
-        const remainingCount = data.filter(workout => !workout.completed).length;
+        const remainingCount = data.filter(
+          (workout) => !workout.completed
+        ).length;
         setRemainingWorkouts(remainingCount);
-        
       } catch (err) {
         setError(err.message);
       } finally {
@@ -57,43 +55,36 @@ const AssignedWorkouts = () => {
     fetchAssignedWorkouts();
   }, []);
 
-  // marking a workout as complete 
+  // marking a workout as complete
   const handleMarkComplete = async (workoutId) => {
     try {
-      const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
-      
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+
       if (!token || !userId) {
-        throw new Error('Authentication required');
+        throw new Error("Authentication required");
       }
 
       const response = await fetch(
         `http://localhost:8000/api/users/${userId}/assigned-workouts/${workoutId}/complete/`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Server response:', errorText);
-        
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || errorData.detail || 'Failed to mark workout as complete');
-        } catch (e) {
-          throw new Error('Failed to mark workout as complete');
-        }
+        console.error("Server response:", errorText);
+        throw new Error("Failed to mark workout as complete");
       }
 
       const completedWorkout = await response.json();
-      console.log('Completed workout:', completedWorkout);
 
-      // Create workout log entry
+      // formatting log
       const workoutLogEntry = {
         exerciseName: completedWorkout.exercise_name,
         description: completedWorkout.description,
@@ -104,44 +95,40 @@ const AssignedWorkouts = () => {
         assignedBy: completedWorkout.trainer_name,
         workoutId: completedWorkout.id,
         workoutHistoryId: completedWorkout.workout_history_id,
-        completed: true
+        exerciseId: completedWorkout.exercise_id,
+        completed: true,
+        user: parseInt(userId)
       };
 
-      // Get existing logs and add new entry
-      const existingLogs = JSON.parse(localStorage.getItem('workoutLogs') || '[]');
-      const workoutExists = existingLogs.some(log => 
-        log.workoutId === workoutId || 
-        log.workoutHistoryId === completedWorkout.workout_history_id
-      );
-      
-      if (!workoutExists) {
-        existingLogs.push(workoutLogEntry);
-        localStorage.setItem('workoutLogs', JSON.stringify(existingLogs));
-        console.log('Added to workout logs:', workoutLogEntry);
-      }
-
-      // Update assigned workouts state
-      setAssignedWorkouts(prevWorkouts => {
-        const updatedWorkouts = prevWorkouts.map(workout =>
+      // Update assigned workouts
+      setAssignedWorkouts(prevWorkouts =>
+        prevWorkouts.map(workout =>
           workout.id === workoutId
             ? { ...workout, completed: true, completed_date: completedWorkout.completed_date }
             : workout
-        );
-        
-        const remainingCount = updatedWorkouts.filter(w => !w.completed).length;
-        setRemainingWorkouts(remainingCount);
-        
-        return updatedWorkouts;
+        )
+      );
+
+      // Update remaining workouts count
+      setRemainingWorkouts(prevCount => prevCount - 1);
+
+      // event for workout log entry
+      const workoutCompletedEvent = new CustomEvent('workoutCompleted', {
+        detail: workoutLogEntry
       });
+      window.dispatchEvent(workoutCompletedEvent);
+
+      // event for profile page - updates the remaining workouts count
+      const profileUpdateEvent = new CustomEvent('assignedWorkoutCompleted', {
+        detail: { workoutId }
+      });
+      window.dispatchEvent(profileUpdateEvent);
 
     } catch (err) {
-      console.error('Error completing workout:', err);
+      console.error("Error completing workout:", err);
       setError(err.message);
     }
-  };
-
-  // Add state for remaining workouts
-  const [remainingWorkouts, setRemainingWorkouts] = useState(0);
+};
 
   // error message if fetch failed
   if (error) return <div className="error">{error}</div>;
@@ -152,12 +139,12 @@ const AssignedWorkouts = () => {
       <Navbar />
       <div className="assigned-workouts-container">
         <h1>Assigned Workouts</h1>
-        
+
         {/* Display remaining workouts count */}
         <div className="workouts-summary">
           <h2>Remaining Workouts: {remainingWorkouts}</h2>
         </div>
-        
+
         {/* if no workouts are assigned */}
         {assignedWorkouts.length === 0 ? (
           <div className="no-workouts">
@@ -167,7 +154,12 @@ const AssignedWorkouts = () => {
           // Display assigned workouts
           <div className="workouts-grid">
             {assignedWorkouts.map((workout) => (
-              <div key={workout.id} className={`workout-card ${workout.completed ? 'completed' : ''}`}>
+              <div
+                key={workout.id}
+                className={`workout-card ${
+                  workout.completed ? "completed" : ""
+                }`}
+              >
                 <h2>{workout.exercise_name}</h2>
                 <p className="description">{workout.description}</p>
                 {/* Workout  */}
@@ -177,10 +169,14 @@ const AssignedWorkouts = () => {
                 </div>
                 {/* Workout metadata  */}
                 <div className="workout-meta">
-                  <span>Assigned: {new Date(workout.assigned_date).toLocaleDateString()}</span>
+                  <span>
+                    Assigned:{" "}
+                    {new Date(workout.assigned_date).toLocaleDateString()}
+                  </span>
                   {workout.completed && (
                     <span className="completion-date">
-                      Completed: {new Date(workout.completed_date).toLocaleDateString()}
+                      Completed:{" "}
+                      {new Date(workout.completed_date).toLocaleDateString()}
                     </span>
                   )}
                 </div>

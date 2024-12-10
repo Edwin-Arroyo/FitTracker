@@ -7,22 +7,70 @@ import "./WorkoutLog.css";
 const WorkoutLogs = () => {
   const [workoutLogs, setWorkoutLogs] = useState([]);
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+
+  // Listen for completed workouts
+  useEffect(() => {
+    const handleWorkoutCompleted = (event) => {
+      const newWorkout = event.detail;
+      setWorkoutLogs(prevLogs => {
+        // Check if workout already exists in logs
+        const workoutExists = prevLogs.some(log => 
+          log.workoutHistoryId === newWorkout.workoutHistoryId
+        );
+        
+        if (workoutExists) {
+          return prevLogs;
+        }
+        
+        // Add new workout and sort by date
+        const updatedLogs = [newWorkout, ...prevLogs];
+        return updatedLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      });
+    };
+
+    window.addEventListener('workoutCompleted', handleWorkoutCompleted);
+    return () => window.removeEventListener('workoutCompleted', handleWorkoutCompleted);
+  }, []);
 
   useEffect(() => {
-    // Get workout logs from localStorage
-    const logs = JSON.parse(localStorage.getItem("workoutLogs") || "[]");
-    console.log("Retrieved workout logs:", logs);
+    const fetchWorkouts = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        
+        const response = await fetch(
+          `http://localhost:8000/api/users/${userId}/workouts/`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-    // Filter to show only last 15 days
-    const fifteenDaysAgo = new Date();
-    fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+        if (!response.ok) {
+          throw new Error("Failed to fetch workouts from backend");
+        }
 
-    const filteredLogs = logs
-      .filter((log) => new Date(log.date) >= fifteenDaysAgo)
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+        const backendLogs = await response.json();
+        
+        // Filter and sort logs
+        const fifteenDaysAgo = new Date();
+        fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
 
-    console.log("Filtered workout logs:", filteredLogs);
-    setWorkoutLogs(filteredLogs);
+        const filteredLogs = backendLogs
+          .filter((log) => new Date(log.date) >= fifteenDaysAgo)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        setWorkoutLogs(filteredLogs);
+      } catch (err) {
+        console.error("Error fetching workouts:", err);
+        setError(err.message);
+      }
+    };
+
+    fetchWorkouts();
   }, []);
 
   return (
@@ -30,6 +78,7 @@ const WorkoutLogs = () => {
       <Navbar />
       <div className="workout-logs-container">
         <h1>Workout Logs (Last 15 Days)</h1>
+        {error && <div className="error-message">{error}</div>}
         <div className="logs-grid">
           {workoutLogs.map((log, index) => (
             <div
@@ -65,10 +114,7 @@ const WorkoutLogs = () => {
             </div>
           ))}
         </div>
-        <button
-          className="action-button"
-          onClick={() => navigate("/WorkoutLog")}
-        >
+        <button className="action-button" onClick={() => navigate("/WorkoutLog")}>
           Log New Workout
         </button>
       </div>
